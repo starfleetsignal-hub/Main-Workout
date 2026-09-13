@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "Matchbox Collector",
+    "slug": "matchbox-collector",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "matchboxcollector",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "description": "Track your Matchbox die-cast collection, browse a curated model checklist across the decades, and build your personal wish list.",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.matchboxcollector.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Used to attach photos of your Matchbox models to your collection entries.",
+        "NSCameraUsageDescription": "Used to take photos of your Matchbox models for your collection entries."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0B1220",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.matchboxcollector.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "static",
+      "backgroundColor": "#0B1220"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#0B1220"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Used to attach photos of your Matchbox models to your collection entries.",
+          "cameraPermission": "Used to take photos of your Matchbox models for your collection entries."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

@@ -1,0 +1,46 @@
+export const colors = {
+  bg: '#0B1220',
+  bgElevated: '#111C2E',
+  header: '#2F6FA8',
+  headerSoft: '#3E85C4',
+  card: '#16213A',
+  cardBorder: '#223252',
+  text: '#F3F6FB',
+  textMuted: '#9AACC7',
+  textFaint: '#5E6F8C',
+  accent: '#4DA3FF',
+  accentSoft: 'rgba(77, 163, 255, 0.16)',
+  onAccent: '#0B1220',
+  success: '#2FBF71',
+  successSoft: 'rgba(47, 191, 113, 0.16)',
+  danger: '#F2555A',
+  dangerSoft: 'rgba(242, 85, 90, 0.16)',
+  warn: '#F2B134',
+  warnSoft: 'rgba(242, 177, 52, 0.16)',
+  wishlist: '#E8547C',
+  wishlistSoft: 'rgba(232, 84, 124, 0.16)',
+  divider: '#22304D',
+  shadow: 'rgba(0, 0, 0, 0.35)',
+};
+
+export const categoryColors: Record<string, string> = {
+  'Muscle Car': '#F2555A',
+  'Sports Car': '#F2B134',
+  Classic: '#9C8CE0',
+  'SUV & Truck': '#4DA3FF',
+  'Emergency & Rescue': '#FF7A6E',
+  Construction: '#E2A23B',
+  Military: '#7FA463',
+  'Bus & Van': '#4FC3D9',
+  Motorcycle: '#C77DFF',
+  Racing: '#FF9563',
+  Novelty: '#57C7C0',
+};
+
+export const conditionColors: Record<string, string> = {
+  Mint: '#2FBF71',
+  Excellent: '#4DA3FF',
+  Good: '#F2B134',
+  Fair: '#F2914A',
+  Poor: '#F2555A',
+};

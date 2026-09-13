@@ -13,6 +13,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Pectoralis Major', 'Pecs'],
     group: 'Upper Body',
     short: 'Pushes the arm across and in front of the body.',
+    diagram: { view: 'Front', highlights: [{ cx: 100, cy: 85, rx: 30, ry: 18 }] },
     anatomy: {
       origin: 'Clavicle, sternum, upper rib cartilage',
       insertion: 'Upper humerus (upper arm bone)',
@@ -91,6 +92,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Anterior Deltoid'],
     group: 'Upper Body',
     short: 'Lifts the arm forward and overhead.',
+    diagram: { view: 'Front', highlights: [{ cx: 66, cy: 70, rx: 12, ry: 13 }, { cx: 134, cy: 70, rx: 12, ry: 13 }] },
     anatomy: {
       origin: 'Front third of the clavicle',
       insertion: 'Deltoid tuberosity of the humerus',
@@ -169,6 +171,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Lateral Deltoid'],
     group: 'Upper Body',
     short: 'Lifts the arm out to the side; creates shoulder width.',
+    diagram: { view: 'Front', highlights: [{ cx: 58, cy: 75, rx: 10, ry: 15 }, { cx: 142, cy: 75, rx: 10, ry: 15 }] },
     anatomy: {
       origin: 'Acromion process of the shoulder blade',
       insertion: 'Deltoid tuberosity of the humerus',
@@ -246,6 +249,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Posterior Deltoid'],
     group: 'Upper Body',
     short: 'Pulls the arm backward; supports posture and shoulder health.',
+    diagram: { view: 'Back', highlights: [{ cx: 60, cy: 74, rx: 11, ry: 14 }, { cx: 140, cy: 74, rx: 11, ry: 14 }] },
     anatomy: {
       origin: 'Spine of the scapula (shoulder blade)',
       insertion: 'Deltoid tuberosity of the humerus',
@@ -323,6 +327,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Trapezius', 'Upper Back'],
     group: 'Upper Body',
     short: 'Shrugs, rotates, and stabilizes the shoulder blades.',
+    diagram: { view: 'Back', highlights: [{ cx: 100, cy: 60, rx: 26, ry: 16 }] },
     anatomy: {
       origin: 'Base of the skull and spine (neck to mid-back)',
       insertion: 'Collarbone and shoulder blade',
@@ -401,6 +406,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Latissimus Dorsi'],
     group: 'Upper Body',
     short: 'Pulls the arm down and back; creates back width.',
+    diagram: { view: 'Back', highlights: [{ cx: 72, cy: 112, rx: 14, ry: 26 }, { cx: 128, cy: 112, rx: 14, ry: 26 }] },
     anatomy: {
       origin: 'Lower spine, pelvis, and lower ribs',
       insertion: 'Upper humerus (upper arm bone)',
@@ -478,6 +484,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Rhomboids', 'Middle Trapezius'],
     group: 'Upper Body',
     short: 'Pulls the shoulder blades together; supports upright posture.',
+    diagram: { view: 'Back', highlights: [{ cx: 100, cy: 96, rx: 18, ry: 14 }] },
     anatomy: {
       origin: 'Base of the neck and upper spine',
       insertion: 'Inner edge of the shoulder blade',
@@ -555,6 +562,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Biceps Brachii'],
     group: 'Upper Body',
     short: 'Bends the elbow and rotates the forearm palm-up.',
+    diagram: { view: 'Front', highlights: [{ cx: 52, cy: 112, rx: 10, ry: 18 }, { cx: 148, cy: 112, rx: 10, ry: 18 }] },
     anatomy: {
       origin: 'Shoulder blade (two heads)',
       insertion: 'Radius bone of the forearm',
@@ -631,6 +639,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Triceps Brachii'],
     group: 'Upper Body',
     short: 'Straightens the elbow; powers all pressing movements.',
+    diagram: { view: 'Back', highlights: [{ cx: 52, cy: 112, rx: 10, ry: 18 }, { cx: 148, cy: 112, rx: 10, ry: 18 }] },
     anatomy: {
       origin: 'Shoulder blade and back of the humerus (three heads)',
       insertion: 'Ulna bone of the forearm (elbow tip)',
@@ -707,6 +716,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Wrist Flexors', 'Wrist Extensors', 'Grip Muscles'],
     group: 'Upper Body',
     short: 'Controls grip strength and wrist movement.',
+    diagram: { view: 'Front', highlights: [{ cx: 44, cy: 162, rx: 9, ry: 24 }, { cx: 156, cy: 162, rx: 9, ry: 24 }] },
     anatomy: {
       origin: 'Elbow region (medial and lateral epicondyles of the humerus)',
       insertion: 'Hand and finger bones',
@@ -783,6 +793,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Supraspinatus', 'Infraspinatus', 'Teres Minor', 'Subscapularis'],
     group: 'Upper Body',
     short: 'Stabilizes and rotates the shoulder joint.',
+    diagram: { view: 'Back', highlights: [{ cx: 72, cy: 80, rx: 11, ry: 11 }, { cx: 128, cy: 80, rx: 11, ry: 11 }] },
     anatomy: {
       origin: 'Shoulder blade (four separate muscles)',
       insertion: 'Upper humerus (upper arm bone)',
@@ -862,6 +873,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Rectus Abdominis', 'Six-Pack Muscle'],
     group: 'Core',
     short: 'Flexes the spine forward; the "six-pack" muscle.',
+    diagram: { view: 'Front', highlights: [{ cx: 100, cy: 128, rx: 20, ry: 26 }] },
     anatomy: {
       origin: 'Pubic bone',
       insertion: 'Rib cage and sternum cartilage',
@@ -939,6 +951,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Internal Obliques', 'External Obliques', 'Side Abs'],
     group: 'Core',
     short: 'Rotates and side-bends the torso.',
+    diagram: { view: 'Front', highlights: [{ cx: 75, cy: 132, rx: 10, ry: 22 }, { cx: 125, cy: 132, rx: 10, ry: 22 }] },
     anatomy: {
       origin: 'Lower ribs and pelvis (two layered muscles per side)',
       insertion: 'Pelvis, abdominal wall, and rib cage',
@@ -1016,6 +1029,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Transverse Abdominis', 'TVA'],
     group: 'Core',
     short: 'The deep "corset" muscle that stabilizes the spine and pelvis.',
+    diagram: { view: 'Front', highlights: [{ cx: 100, cy: 136, rx: 26, ry: 30 }] },
     anatomy: {
       origin: 'Pelvis, lower ribs, and lower spine',
       insertion: 'Abdominal connective tissue (linea alba)',
@@ -1092,6 +1106,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Erector Spinae', 'Spinal Erectors'],
     group: 'Core',
     short: 'Extends and stabilizes the spine; keeps you upright.',
+    diagram: { view: 'Back', highlights: [{ cx: 100, cy: 150, rx: 17, ry: 24 }] },
     anatomy: {
       origin: 'Pelvis and spine (runs along either side of the spinal column)',
       insertion: 'Ribs, spine, and base of the skull',
@@ -1170,6 +1185,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Gluteus Maximus', 'Butt Muscles'],
     group: 'Lower Body',
     short: 'Extends the hip; powers running, jumping, and standing up.',
+    diagram: { view: 'Back', highlights: [{ cx: 83, cy: 186, rx: 16, ry: 18 }, { cx: 117, cy: 186, rx: 16, ry: 18 }] },
     anatomy: {
       origin: 'Back of the pelvis and sacrum',
       insertion: 'Upper femur (thigh bone) and iliotibial band',
@@ -1247,6 +1263,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Gluteus Medius', 'Gluteus Minimus', 'Hip Abductors'],
     group: 'Lower Body',
     short: 'Lifts the leg out to the side; stabilizes the pelvis when walking and running.',
+    diagram: { view: 'Back', highlights: [{ cx: 70, cy: 176, rx: 10, ry: 15 }, { cx: 130, cy: 176, rx: 10, ry: 15 }] },
     anatomy: {
       origin: 'Outer surface of the pelvis',
       insertion: 'Upper femur (thigh bone)',
@@ -1324,6 +1341,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Quadriceps'],
     group: 'Lower Body',
     short: 'Straightens the knee; powers squatting, running, and jumping.',
+    diagram: { view: 'Front', highlights: [{ cx: 85, cy: 235, rx: 15, ry: 42 }, { cx: 115, cy: 235, rx: 15, ry: 42 }] },
     anatomy: {
       origin: 'Pelvis and front of the femur (four muscles)',
       insertion: 'Kneecap, via the patellar tendon to the shin bone',
@@ -1401,6 +1419,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Biceps Femoris', 'Semitendinosus', 'Semimembranosus'],
     group: 'Lower Body',
     short: 'Bends the knee and extends the hip; powers sprinting.',
+    diagram: { view: 'Back', highlights: [{ cx: 85, cy: 235, rx: 15, ry: 42 }, { cx: 115, cy: 235, rx: 15, ry: 42 }] },
     anatomy: {
       origin: 'Base of the pelvis (sit bones)',
       insertion: 'Lower leg bones, below the knee',
@@ -1478,6 +1497,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Adductors', 'Groin Muscles'],
     group: 'Lower Body',
     short: 'Pulls the leg in toward the midline of the body.',
+    diagram: { view: 'Front', highlights: [{ cx: 93, cy: 242, rx: 8, ry: 36 }, { cx: 107, cy: 242, rx: 8, ry: 36 }] },
     anatomy: {
       origin: 'Pubic bone and pelvis',
       insertion: 'Along the inner femur (thigh bone)',
@@ -1555,6 +1575,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Iliopsoas', 'Psoas', 'Rectus Femoris'],
     group: 'Lower Body',
     short: 'Lifts the knee toward the chest; often tight from sitting.',
+    diagram: { view: 'Front', highlights: [{ cx: 88, cy: 203, rx: 10, ry: 15 }, { cx: 112, cy: 203, rx: 10, ry: 15 }] },
     anatomy: {
       origin: 'Lower spine and inner pelvis',
       insertion: 'Upper femur (thigh bone)',
@@ -1631,6 +1652,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Gastrocnemius', 'Soleus'],
     group: 'Lower Body',
     short: 'Points the foot down; powers walking, running, and jumping.',
+    diagram: { view: 'Back', highlights: [{ cx: 85, cy: 318, rx: 12, ry: 36 }, { cx: 115, cy: 318, rx: 12, ry: 36 }] },
     anatomy: {
       origin: 'Back of the femur (gastrocnemius) and back of the shin bones (soleus)',
       insertion: 'Heel bone, via the Achilles tendon',
@@ -1708,6 +1730,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Tibialis Anterior'],
     group: 'Lower Body',
     short: 'Lifts the foot upward; supports ankle control while walking and running.',
+    diagram: { view: 'Front', highlights: [{ cx: 85, cy: 318, rx: 9, ry: 32 }, { cx: 115, cy: 318, rx: 9, ry: 32 }] },
     anatomy: {
       origin: 'Outer shin bone (tibia)',
       insertion: 'Inner foot bones',
@@ -1787,6 +1810,7 @@ export const MUSCLES: Muscle[] = [
     aliases: ['Sternocleidomastoid', 'Levator Scapulae', 'Neck Flexors/Extensors'],
     group: 'Neck',
     short: 'Moves and stabilizes the head; supports posture.',
+    diagram: { view: 'Front', highlights: [{ cx: 100, cy: 53, rx: 15, ry: 13 }] },
     anatomy: {
       origin: 'Breastbone/collarbone (front) and upper spine (back and sides)',
       insertion: 'Skull (base and behind the ear)',

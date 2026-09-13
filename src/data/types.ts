@@ -27,12 +27,25 @@ export interface Anatomy {
   joints: string;
 }
 
+export interface DiagramHighlight {
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+}
+
+export interface Diagram {
+  view: 'Front' | 'Back';
+  highlights: DiagramHighlight[];
+}
+
 export interface Muscle {
   id: string;
   name: string;
   aliases: string[];
   group: MuscleGroup;
   short: string;
+  diagram: Diagram;
   anatomy: Anatomy;
   strength: Exercise[];
   stretches: Stretch[];

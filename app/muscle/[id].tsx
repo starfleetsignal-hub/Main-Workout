@@ -2,6 +2,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BodyMap } from '../../src/components/BodyMap';
 import { ExerciseCard } from '../../src/components/ExerciseCard';
 import { StretchCard } from '../../src/components/StretchCard';
 import { useFavorites } from '../../src/context/FavoritesContext';
@@ -40,6 +41,7 @@ export default function MuscleDetailScreen() {
         }}
       />
       <ScrollView contentContainerStyle={styles.content}>
+        <BodyMap diagram={muscle.diagram} color={groupColor} />
         <View style={[styles.hero, { borderColor: groupColor + '55' }]}>
           <Text style={[styles.group, { color: groupColor }]}>{muscle.group}</Text>
           <Text style={styles.name}>{muscle.name}</Text>

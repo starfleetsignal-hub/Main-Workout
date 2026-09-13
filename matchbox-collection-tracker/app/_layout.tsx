@@ -2,27 +2,39 @@ import { Poppins_600SemiBold, Poppins_700Bold, Poppins_800ExtraBold, useFonts } 
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CollectionProvider } from '../src/context/CollectionContext';
 import { PreferencesProvider } from '../src/context/PreferencesContext';
 import { colors } from '../src/theme/colors';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
+// A slow or blocked network (e.g. a sandboxed preview host) can leave the
+// font fetch neither resolved nor rejected — never gate the whole app on it.
+const FONT_LOAD_TIMEOUT_MS = 3000;
+
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Poppins_600SemiBold,
     Poppins_700Bold,
     Poppins_800ExtraBold,
   });
+  const [timedOut, setTimedOut] = useState(false);
+  const ready = fontsLoaded || !!fontError || timedOut;
 
   useEffect(() => {
-    if (fontsLoaded) {
+    if (fontsLoaded || fontError) return;
+    const timer = setTimeout(() => setTimedOut(true), FONT_LOAD_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [fontsLoaded, fontError]);
+
+  useEffect(() => {
+    if (ready) {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [fontsLoaded]);
+  }, [ready]);
 
-  if (!fontsLoaded) {
+  if (!ready) {
     return null;
   }
 

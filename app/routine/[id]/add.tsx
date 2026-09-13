@@ -7,6 +7,7 @@ import { useRoutines } from '../../../src/context/RoutineContext';
 import { CATALOG } from '../../../src/data/muscles';
 import { CatalogEntry } from '../../../src/data/types';
 import { colors } from '../../../src/theme/colors';
+import { fonts } from '../../../src/theme/fonts';
 
 type Filter = 'all' | 'strength' | 'stretch';
 
@@ -112,8 +113,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.cardBorder,
-    borderRadius: 12,
-    paddingHorizontal: 14,
+    borderRadius: 999,
+    paddingHorizontal: 16,
     paddingVertical: 11,
     color: colors.text,
     fontSize: 14.5,
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
   filterBtn: {
     flex: 1,
     paddingVertical: 8,
-    borderRadius: 10,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.cardBorder,
     backgroundColor: colors.card,
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
   filterBtnText: {
     color: colors.textMuted,
     fontSize: 12.5,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   filterBtnTextActive: {
     color: colors.accent,
@@ -155,22 +156,27 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.cardBorder,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 10,
     marginBottom: 8,
     gap: 10,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 1,
   },
   poseBadge: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   name: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   meta: {
     color: colors.textMuted,
@@ -179,20 +185,20 @@ const styles = StyleSheet.create({
   },
   addBtn: {
     backgroundColor: colors.accent,
-    borderRadius: 10,
-    paddingHorizontal: 12,
+    borderRadius: 999,
+    paddingHorizontal: 14,
     paddingVertical: 8,
   },
   addBtnFlash: {
     backgroundColor: colors.stretch,
   },
   addBtnText: {
-    color: colors.bg,
-    fontWeight: '700',
+    color: colors.onAccent,
+    fontFamily: fonts.bold,
     fontSize: 12,
   },
   addBtnTextFlash: {
-    color: colors.bg,
+    color: colors.onAccent,
   },
   empty: {
     color: colors.textMuted,

@@ -5,6 +5,7 @@ import { MuscleCard } from '../../src/components/MuscleCard';
 import { useFavorites } from '../../src/context/FavoritesContext';
 import { getMuscleById } from '../../src/data/muscles';
 import { colors } from '../../src/theme/colors';
+import { fonts } from '../../src/theme/fonts';
 
 export default function FavoritesScreen() {
   const { favorites, loaded } = useFavorites();
@@ -45,7 +46,7 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: 26,
-    fontWeight: '800',
+    fontFamily: fonts.extrabold,
     marginBottom: 16,
   },
   emptyWrap: {
@@ -61,7 +62,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     marginBottom: 6,
   },
   emptyText: {

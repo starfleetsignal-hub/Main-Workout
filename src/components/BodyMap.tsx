@@ -3,9 +3,10 @@ import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Ellipse, Path } from 'react-native-svg';
 import { Diagram } from '../data/types';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
-const BODY_FILL = '#243456';
-const BODY_STROKE = '#324975';
+const BODY_FILL = '#F0E9DA';
+const BODY_STROKE = '#DDD2BA';
 
 export function BodyMap({ diagram, color }: { diagram: Diagram; color: string }) {
   return (
@@ -53,11 +54,16 @@ const styles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
     backgroundColor: colors.card,
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.cardBorder,
     paddingVertical: 12,
     marginBottom: 14,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 2,
   },
   badge: {
     alignSelf: 'flex-start',
@@ -67,7 +73,7 @@ const styles = StyleSheet.create({
   badgeText: {
     color: colors.textFaint,
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },

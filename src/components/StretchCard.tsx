@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { LayoutAnimation, Pressable, StyleSheet, Text, View } from 'react-native';
 import { PoseIcon } from './PoseIcon';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 import { Stretch } from '../data/types';
 
 export function StretchCard({ stretch, index }: { stretch: Stretch; index: number }) {
@@ -47,11 +48,15 @@ export function StretchCard({ stretch, index }: { stretch: Stretch; index: numbe
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.card,
-    borderRadius: 14,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.cardBorder,
     marginBottom: 12,
-    overflow: 'hidden',
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 2,
   },
   header: {
     flexDirection: 'row',
@@ -61,7 +66,7 @@ const styles = StyleSheet.create({
   poseBadge: {
     width: 46,
     height: 46,
-    borderRadius: 12,
+    borderRadius: 16,
     backgroundColor: colors.stretchSoft,
     alignItems: 'center',
     justifyContent: 'center',
@@ -70,7 +75,7 @@ const styles = StyleSheet.create({
   name: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   metaRow: {
     flexDirection: 'row',
@@ -87,7 +92,7 @@ const styles = StyleSheet.create({
   badgeText: {
     color: colors.stretch,
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   meta: {
     color: colors.textMuted,
@@ -120,7 +125,7 @@ const styles = StyleSheet.create({
   frequency: {
     color: colors.stretch,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: fonts.semibold,
     marginTop: 8,
   },
 });

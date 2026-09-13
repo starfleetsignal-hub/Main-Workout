@@ -5,6 +5,7 @@ import { PoseIcon } from '../../src/components/PoseIcon';
 import { useRoutines } from '../../src/context/RoutineContext';
 import { RoutineItem } from '../../src/data/types';
 import { colors } from '../../src/theme/colors';
+import { fonts } from '../../src/theme/fonts';
 
 function estimateMinutes(strength: number, stretch: number) {
   return Math.round(strength * 4 + stretch * 1.5);
@@ -179,7 +180,7 @@ const styles = StyleSheet.create({
   nameInput: {
     color: colors.text,
     fontSize: 24,
-    fontWeight: '800',
+    fontFamily: fonts.extrabold,
     paddingVertical: 4,
     marginBottom: 14,
   },
@@ -188,9 +189,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.cardBorder,
-    borderRadius: 14,
-    paddingVertical: 14,
-    marginBottom: 14,
+    borderRadius: 20,
+    paddingVertical: 16,
+    marginBottom: 16,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 2,
   },
   stat: {
     flex: 1,
@@ -198,8 +204,8 @@ const styles = StyleSheet.create({
   },
   statNum: {
     color: colors.text,
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 22,
+    fontFamily: fonts.extrabold,
   },
   statLabel: {
     color: colors.textFaint,
@@ -209,23 +215,26 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   addBtn: {
-    backgroundColor: colors.accentSoft,
-    borderWidth: 1,
-    borderColor: colors.accent + '55',
-    borderRadius: 12,
-    paddingVertical: 12,
+    backgroundColor: colors.accent,
+    borderRadius: 999,
+    paddingVertical: 15,
     alignItems: 'center',
-    marginBottom: 18,
+    marginBottom: 20,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   addBtnText: {
-    color: colors.accent,
-    fontWeight: '700',
-    fontSize: 14,
+    color: colors.onAccent,
+    fontFamily: fonts.bold,
+    fontSize: 15,
   },
   sectionLabel: {
     color: colors.textFaint,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 8,
@@ -237,22 +246,27 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.cardBorder,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 10,
     marginBottom: 8,
     gap: 10,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 1,
   },
   poseBadge: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   itemName: {
     color: colors.text,
     fontSize: 14.5,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   itemMeta: {
     color: colors.textMuted,
@@ -271,7 +285,7 @@ const styles = StyleSheet.create({
   moveBtnText: {
     color: colors.textMuted,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   moveBtnDisabled: {
     color: colors.textFaint,
@@ -285,7 +299,7 @@ const styles = StyleSheet.create({
   removeBtnText: {
     color: colors.danger,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   emptyWrap: {
     alignItems: 'center',
@@ -300,7 +314,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     marginBottom: 6,
   },
   emptyText: {
@@ -316,13 +330,13 @@ const styles = StyleSheet.create({
   deleteLink: {
     color: colors.danger,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: fonts.semibold,
   },
   confirmRow: {
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.danger + '55',
-    borderRadius: 12,
+    borderRadius: 18,
     padding: 14,
     alignItems: 'center',
     gap: 10,
@@ -335,23 +349,23 @@ const styles = StyleSheet.create({
   cancelBtn: {
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 8,
+    borderRadius: 999,
     backgroundColor: colors.cardBorder,
   },
   cancelBtnText: {
     color: colors.text,
-    fontWeight: '600',
+    fontFamily: fonts.semibold,
     fontSize: 13,
   },
   deleteBtn: {
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 8,
+    borderRadius: 999,
     backgroundColor: colors.danger,
   },
   deleteBtnText: {
-    color: colors.bg,
-    fontWeight: '700',
+    color: colors.onAccent,
+    fontFamily: fonts.bold,
     fontSize: 13,
   },
 });

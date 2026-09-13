@@ -4,6 +4,7 @@ import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-na
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoutines } from '../../src/context/RoutineContext';
 import { colors } from '../../src/theme/colors';
+import { fonts } from '../../src/theme/fonts';
 
 function estimateMinutes(itemCount: { strength: number; stretch: number }) {
   return Math.round(itemCount.strength * 4 + itemCount.stretch * 1.5);
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: 26,
-    fontWeight: '800',
+    fontFamily: fonts.extrabold,
   },
   subtitle: {
     color: colors.textMuted,
@@ -114,27 +115,32 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.cardBorder,
-    borderRadius: 12,
-    paddingHorizontal: 14,
+    borderRadius: 999,
+    paddingHorizontal: 16,
     paddingVertical: 11,
     color: colors.text,
     fontSize: 14,
   },
   createBtn: {
     backgroundColor: colors.accent,
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    borderRadius: 999,
+    paddingHorizontal: 18,
     justifyContent: 'center',
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 2,
   },
   createBtnText: {
-    color: colors.bg,
-    fontWeight: '700',
+    color: colors.onAccent,
+    fontFamily: fonts.bold,
     fontSize: 14,
   },
   sectionLabel: {
     color: colors.textFaint,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginTop: 18,
@@ -146,9 +152,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.cardBorder,
-    borderRadius: 14,
+    borderRadius: 20,
     padding: 14,
     marginBottom: 10,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 2,
   },
   cardPressed: {
     opacity: 0.8,
@@ -156,7 +167,7 @@ const styles = StyleSheet.create({
   cardName: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   cardMeta: {
     color: colors.textMuted,
@@ -180,7 +191,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     marginBottom: 6,
   },
   emptyText: {

@@ -8,6 +8,7 @@ import { StretchCard } from '../../src/components/StretchCard';
 import { useFavorites } from '../../src/context/FavoritesContext';
 import { getMuscleById } from '../../src/data/muscles';
 import { colors, groupColors } from '../../src/theme/colors';
+import { fonts } from '../../src/theme/fonts';
 
 type TabKey = 'strength' | 'stretch' | 'anatomy';
 
@@ -132,14 +133,19 @@ const styles = StyleSheet.create({
   },
   hero: {
     backgroundColor: colors.card,
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     padding: 18,
     marginBottom: 16,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 2,
   },
   group: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
     marginBottom: 4,
@@ -147,7 +153,7 @@ const styles = StyleSheet.create({
   name: {
     color: colors.text,
     fontSize: 26,
-    fontWeight: '800',
+    fontFamily: fonts.extrabold,
   },
   aliases: {
     color: colors.textFaint,
@@ -168,7 +174,7 @@ const styles = StyleSheet.create({
   tabButton: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.cardBorder,
     alignItems: 'center',
@@ -177,15 +183,20 @@ const styles = StyleSheet.create({
   tabButtonText: {
     color: colors.textMuted,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   anatomyCard: {
     backgroundColor: colors.card,
-    borderRadius: 14,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.cardBorder,
     padding: 16,
     marginBottom: 12,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 2,
   },
   anatomyRow: {
     marginBottom: 14,
@@ -193,7 +204,7 @@ const styles = StyleSheet.create({
   anatomyLabel: {
     color: colors.accent,
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
@@ -205,7 +216,7 @@ const styles = StyleSheet.create({
   },
   safetyCard: {
     backgroundColor: colors.strengthSoft,
-    borderRadius: 14,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.strength + '55',
     padding: 16,
@@ -214,7 +225,7 @@ const styles = StyleSheet.create({
   safetyTitle: {
     color: colors.strength,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 8,

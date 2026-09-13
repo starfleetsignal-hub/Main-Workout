@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MuscleCard } from '../../src/components/MuscleCard';
 import { MUSCLE_GROUPS, getMuscleById, getMusclesByGroup } from '../../src/data/muscles';
 import { colors, groupColors } from '../../src/theme/colors';
+import { fonts } from '../../src/theme/fonts';
 
 type Row = { type: 'header'; group: string } | { type: 'muscle'; id: string };
 
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: 30,
-    fontWeight: '800',
+    fontFamily: fonts.extrabold,
   },
   subtitle: {
     color: colors.textMuted,
@@ -83,7 +84,7 @@ const styles = StyleSheet.create({
   groupTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
   },

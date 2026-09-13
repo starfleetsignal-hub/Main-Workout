@@ -1,0 +1,113 @@
+import React, { useState } from 'react';
+import { LayoutAnimation, Pressable, StyleSheet, Text, View } from 'react-native';
+import { colors } from '../theme/colors';
+import { Stretch } from '../data/types';
+
+export function StretchCard({ stretch, index }: { stretch: Stretch; index: number }) {
+  const [open, setOpen] = useState(index === 0);
+
+  const toggle = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setOpen((o) => !o);
+  };
+
+  return (
+    <View style={styles.card}>
+      <Pressable style={styles.header} onPress={toggle}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.name}>{stretch.name}</Text>
+          <View style={styles.metaRow}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{stretch.type}</Text>
+            </View>
+            <Text style={styles.meta}>{stretch.hold}</Text>
+          </View>
+        </View>
+        <Text style={styles.chevron}>{open ? '−' : '+'}</Text>
+      </Pressable>
+      {open && (
+        <View style={styles.body}>
+          {stretch.instructions.map((step, i) => (
+            <View style={styles.row} key={i}>
+              <Text style={styles.bullet}>{i + 1}.</Text>
+              <Text style={styles.rowText}>{step}</Text>
+            </View>
+          ))}
+          <Text style={styles.frequency}>Frequency: {stretch.frequency}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+  },
+  name: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    gap: 8,
+  },
+  badge: {
+    backgroundColor: colors.stretchSoft,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  badgeText: {
+    color: colors.stretch,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  meta: {
+    color: colors.textMuted,
+    fontSize: 12,
+  },
+  chevron: {
+    color: colors.textMuted,
+    fontSize: 22,
+    paddingLeft: 8,
+  },
+  body: {
+    paddingHorizontal: 14,
+    paddingBottom: 14,
+  },
+  row: {
+    flexDirection: 'row',
+    marginBottom: 5,
+  },
+  bullet: {
+    color: colors.textMuted,
+    width: 20,
+    fontSize: 13,
+  },
+  rowText: {
+    color: colors.text,
+    fontSize: 13.5,
+    flex: 1,
+    lineHeight: 19,
+  },
+  frequency: {
+    color: colors.stretch,
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+});

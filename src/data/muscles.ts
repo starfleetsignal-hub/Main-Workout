@@ -1,4 +1,4 @@
-import { Muscle } from './types';
+import { CatalogEntry, Muscle } from './types';
 
 // Content reflects mainstream, widely-published exercise-science consensus
 // (e.g. ACSM position stands, NSCA Essentials of Strength Training and
@@ -2013,3 +2013,29 @@ export function getMuscleById(id: string) {
 export function getMusclesByGroup(group: string) {
   return MUSCLES.filter((m) => m.group === group);
 }
+
+// Every exercise and stretch in the database, flattened into one list for
+// the routine builder's "add exercises" picker.
+export const CATALOG: CatalogEntry[] = MUSCLES.flatMap((m) => [
+  ...m.strength.map((ex) => ({
+    entryId: `${m.id}:strength:${ex.name}`,
+    kind: 'strength' as const,
+    muscleId: m.id,
+    muscleName: m.name,
+    name: ex.name,
+    pose: ex.pose,
+    level: ex.level,
+    detail: ex.setsReps,
+    equipment: ex.equipment,
+  })),
+  ...m.stretches.map((st) => ({
+    entryId: `${m.id}:stretch:${st.name}`,
+    kind: 'stretch' as const,
+    muscleId: m.id,
+    muscleName: m.name,
+    name: st.name,
+    pose: st.pose,
+    type: st.type,
+    detail: st.hold,
+  })),
+]);

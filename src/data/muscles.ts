@@ -23,6 +23,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Push-Up',
+        pose: 'pushUp',
         level: 'Beginner',
         equipment: 'Bodyweight',
         setsReps: '3 sets x 8-15 reps',
@@ -36,6 +37,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Flat Dumbbell Bench Press',
+        pose: 'bench',
         level: 'Intermediate',
         equipment: 'Dumbbells, bench',
         setsReps: '3-4 sets x 6-12 reps',
@@ -49,6 +51,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Barbell Bench Press',
+        pose: 'bench',
         level: 'Advanced',
         equipment: 'Barbell, bench, rack',
         setsReps: '3-5 sets x 3-8 reps',
@@ -64,6 +67,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Doorway Chest Stretch',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds x 2-3 sets per side',
         instructions: [
@@ -75,6 +79,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Wall Slide Pec Opener',
+        pose: 'armsUp',
         type: 'Dynamic',
         hold: '10-15 slow reps',
         instructions: [
@@ -102,6 +107,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Front Raise',
+        pose: 'armsForward',
         level: 'Beginner',
         equipment: 'Light dumbbells',
         setsReps: '3 sets x 10-15 reps',
@@ -115,6 +121,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Seated Dumbbell Shoulder Press',
+        pose: 'armsUp',
         level: 'Intermediate',
         equipment: 'Dumbbells, bench with back support',
         setsReps: '3-4 sets x 6-12 reps',
@@ -128,6 +135,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Standing Barbell Overhead Press',
+        pose: 'armsUp',
         level: 'Advanced',
         equipment: 'Barbell',
         setsReps: '3-5 sets x 4-8 reps',
@@ -143,6 +151,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Cross-Body Shoulder Stretch',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -154,6 +163,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Overhead Arm Circles',
+        pose: 'armsOut',
         type: 'Dynamic',
         hold: '10 circles each direction',
         instructions: [
@@ -181,6 +191,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Standing Lateral Raise',
+        pose: 'armsOut',
         level: 'Beginner',
         equipment: 'Light dumbbells',
         setsReps: '3 sets x 12-20 reps',
@@ -194,6 +205,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Cable Lateral Raise',
+        pose: 'armsOut',
         level: 'Intermediate',
         equipment: 'Cable machine',
         setsReps: '3 sets x 12-15 reps per side',
@@ -207,6 +219,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Seated Dumbbell Lateral Raise',
+        pose: 'armsOut',
         level: 'Advanced',
         equipment: 'Dumbbells, bench',
         setsReps: '4 sets x 10-15 reps, slow tempo',
@@ -222,6 +235,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Cross-Body Shoulder Stretch',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -232,6 +246,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Arm-Across-Chest with Rotation',
+        pose: 'standingReach',
         type: 'Dynamic',
         hold: '10 slow reps per side',
         instructions: [
@@ -259,6 +274,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Bent-Over Reverse Fly',
+        pose: 'hinge',
         level: 'Beginner',
         equipment: 'Light dumbbells',
         setsReps: '3 sets x 12-15 reps',
@@ -272,6 +288,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Face Pull',
+        pose: 'hinge',
         level: 'Intermediate',
         equipment: 'Cable machine with rope attachment',
         setsReps: '3 sets x 12-15 reps',
@@ -285,6 +302,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Chest-Supported Rear Delt Row',
+        pose: 'hinge',
         level: 'Advanced',
         equipment: 'Dumbbells, incline bench',
         setsReps: '4 sets x 10-15 reps',
@@ -300,6 +318,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Cross-Body Rear Delt Stretch',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -310,6 +329,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Thread the Needle',
+        pose: 'kneeling',
         type: 'Dynamic',
         hold: '8-10 slow reps per side',
         instructions: [
@@ -337,6 +357,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Dumbbell Shrug',
+        pose: 'standing',
         level: 'Beginner',
         equipment: 'Dumbbells',
         setsReps: '3 sets x 10-15 reps',
@@ -350,6 +371,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Barbell Shrug',
+        pose: 'standing',
         level: 'Intermediate',
         equipment: 'Barbell',
         setsReps: '3-4 sets x 8-12 reps',
@@ -363,6 +385,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Face Pull to Trap Squeeze / Rack Pull',
+        pose: 'hinge',
         level: 'Advanced',
         equipment: 'Barbell and rack, or cable',
         setsReps: '3-4 sets x 6-10 reps',
@@ -378,6 +401,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Upper Trap Stretch',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -389,6 +413,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Shoulder Blade Rolls',
+        pose: 'standing',
         type: 'Dynamic',
         hold: '10 slow rolls each direction',
         instructions: [
@@ -416,6 +441,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Band or Machine Lat Pulldown',
+        pose: 'hangPull',
         level: 'Beginner',
         equipment: 'Resistance band or lat pulldown machine',
         setsReps: '3 sets x 10-15 reps',
@@ -429,6 +455,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Inverted Row',
+        pose: 'hangPull',
         level: 'Intermediate',
         equipment: 'Barbell in a rack, or rings/TRX',
         setsReps: '3-4 sets x 8-15 reps',
@@ -442,6 +469,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Weighted Pull-Up / Chin-Up',
+        pose: 'hangPull',
         level: 'Advanced',
         equipment: 'Pull-up bar (plus weight belt/vest optional)',
         setsReps: '3-5 sets x 4-10 reps',
@@ -457,6 +485,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Overhead Lat Stretch',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -467,6 +496,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Child\'s Pose Reach',
+        pose: 'kneeling',
         type: 'Static',
         hold: '30-45 seconds',
         instructions: [
@@ -494,6 +524,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Seated Band Row',
+        pose: 'seatedReach',
         level: 'Beginner',
         equipment: 'Resistance band',
         setsReps: '3 sets x 12-15 reps',
@@ -507,6 +538,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Dumbbell Bent-Over Row',
+        pose: 'hinge',
         level: 'Intermediate',
         equipment: 'Dumbbells',
         setsReps: '3-4 sets x 8-12 reps',
@@ -520,6 +552,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Seated Cable Row',
+        pose: 'seatedReach',
         level: 'Advanced',
         equipment: 'Cable row machine',
         setsReps: '3-4 sets x 8-12 reps',
@@ -535,6 +568,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Standing Rounded-Back Reach',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds',
         instructions: [
@@ -545,6 +579,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Cat-Cow',
+        pose: 'kneeling',
         type: 'Dynamic',
         hold: '8-10 slow cycles',
         instructions: [
@@ -572,6 +607,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Dumbbell Curl',
+        pose: 'curl',
         level: 'Beginner',
         equipment: 'Dumbbells',
         setsReps: '3 sets x 10-15 reps',
@@ -585,6 +621,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Incline Dumbbell Curl',
+        pose: 'curl',
         level: 'Intermediate',
         equipment: 'Dumbbells, incline bench',
         setsReps: '3 sets x 10-12 reps',
@@ -598,6 +635,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Barbell or EZ-Bar Curl',
+        pose: 'curl',
         level: 'Advanced',
         equipment: 'Barbell or EZ-curl bar',
         setsReps: '3-4 sets x 6-10 reps',
@@ -613,6 +651,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Extended-Arm Wall Stretch',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -623,6 +662,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Overhead Triceps-and-Biceps Reach',
+        pose: 'armsUp',
         type: 'Dynamic',
         hold: '10 slow reps',
         instructions: [
@@ -649,6 +689,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Bench Dip',
+        pose: 'hinge',
         level: 'Beginner',
         equipment: 'Bench or sturdy chair',
         setsReps: '3 sets x 8-15 reps',
@@ -662,6 +703,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Cable Triceps Pushdown',
+        pose: 'curl',
         level: 'Intermediate',
         equipment: 'Cable machine',
         setsReps: '3 sets x 10-15 reps',
@@ -675,6 +717,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Close-Grip Bench Press',
+        pose: 'bench',
         level: 'Advanced',
         equipment: 'Barbell, bench',
         setsReps: '3-4 sets x 6-10 reps',
@@ -690,6 +733,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Overhead Triceps Stretch',
+        pose: 'armsUp',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -700,6 +744,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Cross-Arm Overhead Reach',
+        pose: 'standingReach',
         type: 'Dynamic',
         hold: '10 slow reps per side',
         instructions: [
@@ -726,6 +771,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Dead Hang',
+        pose: 'hangPull',
         level: 'Beginner',
         equipment: 'Pull-up bar',
         setsReps: '3 sets x 15-30 seconds',
@@ -739,6 +785,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Farmer\'s Carry',
+        pose: 'standing',
         level: 'Intermediate',
         equipment: 'Dumbbells or kettlebells',
         setsReps: '3 sets x 20-40 meters or 30-45 seconds',
@@ -751,6 +798,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Wrist Curl and Reverse Wrist Curl',
+        pose: 'curl',
         level: 'Advanced',
         equipment: 'Barbell or dumbbells',
         setsReps: '3 sets x 12-20 reps each direction',
@@ -766,6 +814,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Wrist Flexor Stretch',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -776,6 +825,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Wrist Extensor Stretch',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -803,6 +853,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Band External Rotation',
+        pose: 'curl',
         level: 'Beginner',
         equipment: 'Resistance band',
         setsReps: '3 sets x 12-15 reps per side',
@@ -816,6 +867,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Side-Lying External Rotation',
+        pose: 'sideLying',
         level: 'Intermediate',
         equipment: 'Light dumbbell',
         setsReps: '3 sets x 12-15 reps per side',
@@ -829,6 +881,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Prone "Y-T-W" Raise',
+        pose: 'pushUp',
         level: 'Advanced',
         equipment: 'Light dumbbells or bodyweight, incline bench',
         setsReps: '3 sets x 8-10 reps per letter',
@@ -844,6 +897,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Sleeper Stretch',
+        pose: 'sideLying',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -854,6 +908,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Cross-Body Shoulder Stretch',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -883,6 +938,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Crunch',
+        pose: 'bridge',
         level: 'Beginner',
         equipment: 'Bodyweight, mat',
         setsReps: '3 sets x 15-20 reps',
@@ -896,6 +952,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Plank',
+        pose: 'pushUp',
         level: 'Intermediate',
         equipment: 'Bodyweight, mat',
         setsReps: '3 sets x 30-60 seconds',
@@ -909,6 +966,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Hanging Leg Raise',
+        pose: 'hangPull',
         level: 'Advanced',
         equipment: 'Pull-up bar',
         setsReps: '3-4 sets x 8-15 reps',
@@ -924,6 +982,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Cobra Stretch',
+        pose: 'pushUp',
         type: 'Static',
         hold: '20-30 seconds',
         instructions: [
@@ -934,6 +993,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Standing Backbend Reach',
+        pose: 'standingReach',
         type: 'Dynamic',
         hold: '8-10 slow reps',
         instructions: [
@@ -961,6 +1021,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Side Plank',
+        pose: 'sideLying',
         level: 'Beginner',
         equipment: 'Bodyweight, mat',
         setsReps: '3 sets x 20-40 seconds per side',
@@ -974,6 +1035,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Russian Twist',
+        pose: 'seatedReach',
         level: 'Intermediate',
         equipment: 'Bodyweight or light weight',
         setsReps: '3 sets x 16-24 total reps (both sides)',
@@ -987,6 +1049,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Cable Woodchopper',
+        pose: 'hinge',
         level: 'Advanced',
         equipment: 'Cable machine',
         setsReps: '3 sets x 10-12 reps per side',
@@ -1002,6 +1065,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Standing Side Bend',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -1012,6 +1076,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Seated Spinal Twist',
+        pose: 'seatedReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -1039,6 +1104,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Abdominal Bracing / Vacuum',
+        pose: 'standing',
         level: 'Beginner',
         equipment: 'Bodyweight',
         setsReps: '3 sets x 5-10 breaths',
@@ -1052,6 +1118,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Dead Bug',
+        pose: 'bridge',
         level: 'Intermediate',
         equipment: 'Bodyweight, mat',
         setsReps: '3 sets x 8-12 reps per side',
@@ -1065,6 +1132,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Weighted Suitcase Carry',
+        pose: 'standing',
         level: 'Advanced',
         equipment: 'Dumbbell or kettlebell',
         setsReps: '3 sets x 20-30 meters or 30-40 seconds per side',
@@ -1079,6 +1147,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Child\'s Pose',
+        pose: 'kneeling',
         type: 'Static',
         hold: '30-45 seconds',
         instructions: [
@@ -1089,6 +1158,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Standing Backbend Reach',
+        pose: 'standingReach',
         type: 'Dynamic',
         hold: '8-10 slow reps',
         instructions: [
@@ -1116,6 +1186,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Bird Dog',
+        pose: 'kneeling',
         level: 'Beginner',
         equipment: 'Bodyweight, mat',
         setsReps: '3 sets x 8-12 reps per side',
@@ -1129,6 +1200,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Back Extension (Hyperextension)',
+        pose: 'pushUp',
         level: 'Intermediate',
         equipment: 'Roman chair / hyperextension bench',
         setsReps: '3 sets x 10-15 reps',
@@ -1142,6 +1214,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Conventional Deadlift',
+        pose: 'hinge',
         level: 'Advanced',
         equipment: 'Barbell',
         setsReps: '3-5 sets x 3-8 reps',
@@ -1157,6 +1230,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Knee-to-Chest Stretch',
+        pose: 'bridge',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -1167,6 +1241,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Cat-Cow',
+        pose: 'kneeling',
         type: 'Dynamic',
         hold: '8-10 slow cycles',
         instructions: [
@@ -1195,6 +1270,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Glute Bridge',
+        pose: 'bridge',
         level: 'Beginner',
         equipment: 'Bodyweight, mat',
         setsReps: '3 sets x 12-20 reps',
@@ -1208,6 +1284,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Bodyweight or Goblet Squat',
+        pose: 'squat',
         level: 'Intermediate',
         equipment: 'Bodyweight or one dumbbell/kettlebell',
         setsReps: '3-4 sets x 10-15 reps',
@@ -1221,6 +1298,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Barbell Hip Thrust',
+        pose: 'bridge',
         level: 'Advanced',
         equipment: 'Barbell, bench, pad',
         setsReps: '3-4 sets x 6-12 reps',
@@ -1236,6 +1314,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Figure-Four Stretch',
+        pose: 'bridge',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -1246,6 +1325,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Pigeon Pose',
+        pose: 'kneeling',
         type: 'Static',
         hold: '30-45 seconds per side',
         instructions: [
@@ -1273,6 +1353,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Side-Lying Leg Raise',
+        pose: 'sideLying',
         level: 'Beginner',
         equipment: 'Bodyweight',
         setsReps: '3 sets x 15-20 reps per side',
@@ -1286,6 +1367,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Banded Lateral Walk (Monster Walk)',
+        pose: 'squat',
         level: 'Intermediate',
         equipment: 'Mini resistance band',
         setsReps: '3 sets x 10-15 steps per direction',
@@ -1299,6 +1381,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Cable or Machine Hip Abduction',
+        pose: 'armsOut',
         level: 'Advanced',
         equipment: 'Cable machine or hip abduction machine',
         setsReps: '3-4 sets x 12-15 reps per side',
@@ -1314,6 +1397,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Figure-Four Stretch',
+        pose: 'bridge',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -1324,6 +1408,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Standing IT Band / Outer Hip Stretch',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -1351,6 +1436,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Bodyweight Squat',
+        pose: 'squat',
         level: 'Beginner',
         equipment: 'Bodyweight',
         setsReps: '3 sets x 12-20 reps',
@@ -1364,6 +1450,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Walking Lunge',
+        pose: 'lunge',
         level: 'Intermediate',
         equipment: 'Bodyweight or dumbbells',
         setsReps: '3 sets x 10-12 reps per leg',
@@ -1377,6 +1464,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Barbell Back Squat',
+        pose: 'squat',
         level: 'Advanced',
         equipment: 'Barbell, rack',
         setsReps: '3-5 sets x 4-10 reps',
@@ -1392,6 +1480,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Standing Quad Stretch',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -1402,6 +1491,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Couch Stretch',
+        pose: 'kneeling',
         type: 'Static',
         hold: '30-45 seconds per side',
         instructions: [
@@ -1429,6 +1519,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Glute-Ham Bridge (Single-Leg Bridge)',
+        pose: 'bridge',
         level: 'Beginner',
         equipment: 'Bodyweight, mat',
         setsReps: '3 sets x 10-15 reps per side',
@@ -1442,6 +1533,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Romanian Deadlift',
+        pose: 'hinge',
         level: 'Intermediate',
         equipment: 'Dumbbells or barbell',
         setsReps: '3-4 sets x 8-12 reps',
@@ -1455,6 +1547,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Nordic Hamstring Curl',
+        pose: 'kneeling',
         level: 'Advanced',
         equipment: 'Partner or anchored ankle support',
         setsReps: '3 sets x 4-8 reps',
@@ -1470,6 +1563,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Seated or Standing Hamstring Stretch',
+        pose: 'seatedReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -1480,6 +1574,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Standing Leg Swing',
+        pose: 'standingReach',
         type: 'Dynamic',
         hold: '10-15 swings per side',
         instructions: [
@@ -1507,6 +1602,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Side-Lying Inner Thigh Lift',
+        pose: 'sideLying',
         level: 'Beginner',
         equipment: 'Bodyweight',
         setsReps: '3 sets x 12-20 reps per side',
@@ -1520,6 +1616,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Sumo Squat',
+        pose: 'squat',
         level: 'Intermediate',
         equipment: 'Bodyweight or one dumbbell/kettlebell',
         setsReps: '3 sets x 10-15 reps',
@@ -1533,6 +1630,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Cable or Band Hip Adduction',
+        pose: 'armsOut',
         level: 'Advanced',
         equipment: 'Cable machine or band',
         setsReps: '3-4 sets x 12-15 reps per side',
@@ -1548,6 +1646,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Butterfly Stretch',
+        pose: 'seatedReach',
         type: 'Static',
         hold: '30-45 seconds',
         instructions: [
@@ -1558,6 +1657,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Side Lunge Stretch',
+        pose: 'lunge',
         type: 'Dynamic',
         hold: '8-10 reps per side',
         instructions: [
@@ -1585,6 +1685,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Standing Marching / High Knees',
+        pose: 'lunge',
         level: 'Beginner',
         equipment: 'Bodyweight',
         setsReps: '3 sets x 20-30 seconds',
@@ -1597,6 +1698,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Hanging or Lying Leg Raise (Straight Leg)',
+        pose: 'hangPull',
         level: 'Intermediate',
         equipment: 'Pull-up bar or floor',
         setsReps: '3 sets x 10-15 reps',
@@ -1610,6 +1712,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Weighted March / Loaded Step-Up',
+        pose: 'lunge',
         level: 'Advanced',
         equipment: 'Dumbbells, box or bench',
         setsReps: '3-4 sets x 8-12 reps per side',
@@ -1625,6 +1728,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Kneeling Hip Flexor Stretch',
+        pose: 'kneeling',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -1635,6 +1739,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Couch Stretch',
+        pose: 'kneeling',
         type: 'Static',
         hold: '30-45 seconds per side',
         instructions: [
@@ -1662,6 +1767,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Standing Bodyweight Calf Raise',
+        pose: 'standing',
         level: 'Beginner',
         equipment: 'Bodyweight',
         setsReps: '3 sets x 15-25 reps',
@@ -1675,6 +1781,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Single-Leg Calf Raise',
+        pose: 'standing',
         level: 'Intermediate',
         equipment: 'Bodyweight, optional dumbbell',
         setsReps: '3 sets x 12-15 reps per side',
@@ -1688,6 +1795,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Seated or Standing Weighted Calf Raise',
+        pose: 'standing',
         level: 'Advanced',
         equipment: 'Calf raise machine, or barbell/dumbbells with a step',
         setsReps: '4 sets x 10-20 reps',
@@ -1703,6 +1811,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Wall Calf Stretch (Gastrocnemius)',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -1713,6 +1822,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Bent-Knee Wall Stretch (Soleus)',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -1740,6 +1850,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Toe Raise (Heel-Supported)',
+        pose: 'seatedReach',
         level: 'Beginner',
         equipment: 'Bodyweight',
         setsReps: '3 sets x 15-25 reps',
@@ -1753,6 +1864,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Banded Dorsiflexion',
+        pose: 'seatedReach',
         level: 'Intermediate',
         equipment: 'Resistance band',
         setsReps: '3 sets x 15-20 reps per side',
@@ -1766,6 +1878,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Tibialis Raise (Wall-Supported)',
+        pose: 'standing',
         level: 'Advanced',
         equipment: 'Wall or slant board, optional weight',
         setsReps: '3-4 sets x 15-25 reps',
@@ -1781,6 +1894,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Kneeling Shin Stretch',
+        pose: 'kneeling',
         type: 'Static',
         hold: '20-30 seconds',
         instructions: [
@@ -1791,6 +1905,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Ankle Circles',
+        pose: 'seatedReach',
         type: 'Dynamic',
         hold: '10 circles each direction, per side',
         instructions: [
@@ -1820,6 +1935,7 @@ export const MUSCLES: Muscle[] = [
     strength: [
       {
         name: 'Manual Neck Isometric',
+        pose: 'standing',
         level: 'Beginner',
         equipment: 'Bodyweight (hand resistance)',
         setsReps: '3 sets x 10-second holds, 4 directions',
@@ -1833,6 +1949,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Prone Neck Extension',
+        pose: 'pushUp',
         level: 'Intermediate',
         equipment: 'Bodyweight, bench (optional)',
         setsReps: '3 sets x 10-15 reps',
@@ -1846,6 +1963,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Weighted Neck Harness Flexion/Extension',
+        pose: 'standing',
         level: 'Advanced',
         equipment: 'Neck harness with light weight plate',
         setsReps: '3 sets x 10-15 reps',
@@ -1861,6 +1979,7 @@ export const MUSCLES: Muscle[] = [
     stretches: [
       {
         name: 'Side Neck Stretch',
+        pose: 'standingReach',
         type: 'Static',
         hold: '20-30 seconds per side',
         instructions: [
@@ -1871,6 +1990,7 @@ export const MUSCLES: Muscle[] = [
       },
       {
         name: 'Chin Tuck',
+        pose: 'standing',
         type: 'Dynamic',
         hold: '10 reps, 3-5 second holds',
         instructions: [

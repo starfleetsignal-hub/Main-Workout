@@ -2,11 +2,30 @@ export type MuscleGroup = 'Upper Body' | 'Core' | 'Lower Body' | 'Neck';
 
 export type ExerciseLevel = 'Beginner' | 'Intermediate' | 'Advanced';
 
+export type PoseId =
+  | 'standing'
+  | 'armsUp'
+  | 'armsOut'
+  | 'armsForward'
+  | 'curl'
+  | 'hinge'
+  | 'squat'
+  | 'lunge'
+  | 'pushUp'
+  | 'bench'
+  | 'bridge'
+  | 'hangPull'
+  | 'kneeling'
+  | 'seatedReach'
+  | 'sideLying'
+  | 'standingReach';
+
 export interface Exercise {
   name: string;
   level: ExerciseLevel;
   equipment: string;
   setsReps: string;
+  pose: PoseId;
   instructions: string[];
   cues: string[];
   mistakes: string[];
@@ -16,6 +35,7 @@ export interface Stretch {
   name: string;
   type: 'Static' | 'Dynamic' | 'PNF';
   hold: string;
+  pose: PoseId;
   instructions: string[];
   frequency: string;
 }

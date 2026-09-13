@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LayoutAnimation, Pressable, StyleSheet, Text, View } from 'react-native';
+import { PoseIcon } from './PoseIcon';
 import { colors } from '../theme/colors';
 import { Stretch } from '../data/types';
 
@@ -14,6 +15,9 @@ export function StretchCard({ stretch, index }: { stretch: Stretch; index: numbe
   return (
     <View style={styles.card}>
       <Pressable style={styles.header} onPress={toggle}>
+        <View style={styles.poseBadge}>
+          <PoseIcon pose={stretch.pose} color={colors.stretch} size={30} />
+        </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.name}>{stretch.name}</Text>
           <View style={styles.metaRow}>
@@ -53,6 +57,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
+  },
+  poseBadge: {
+    width: 46,
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: colors.stretchSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   name: {
     color: colors.text,

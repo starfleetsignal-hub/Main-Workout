@@ -42,7 +42,7 @@ export default function MuscleDetailScreen() {
         }}
       />
       <ScrollView contentContainerStyle={styles.content}>
-        <BodyMap diagram={muscle.diagram} color={groupColor} />
+        <BodyMap diagram={muscle.diagram} color={groupColor} muscleId={muscle.id} />
         <View style={[styles.hero, { borderColor: groupColor + '55' }]}>
           <Text style={[styles.group, { color: groupColor }]}>{muscle.group}</Text>
           <Text style={styles.name}>{muscle.name}</Text>

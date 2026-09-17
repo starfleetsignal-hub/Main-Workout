@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CosmoPlan</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
+  :root{
+    --bg1:#160B2E; --bg2:#0A0E27; --bg3:#05070F;
+    --card:#1B2140; --card-line:rgba(255,255,255,0.08);
+    --ink:#EDEFFA; --ink-dim:#9AA3C4;
+    --gold:#F5C542; --gold-glow:rgba(245,197,66,0.55);
+    --cyan:#4FD1E8; --green:#57D68D; --pink:#E85D8A; --lock:#4B5279; --alert:#FF6B5E;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    margin:0; color:var(--ink); font-family:'Fredoka',sans-serif;
+    background: radial-gradient(ellipse at 50% -10%, var(--bg1) 0%, var(--bg2) 55%, var(--bg3) 100%);
+    min-height:100vh;
+  }
+  #stars{ position:fixed; inset:0; z-index:-1; pointer-events:none; }
+  .wrap{ max-width:480px; margin:0 auto; padding:0 16px 40px; position:relative; }
+  .display{ font-family:'Fredoka',sans-serif; font-weight:600; }
+  header{ display:flex; align-items:center; justify-content:space-between; margin:0 -16px 14px; padding:14px 16px 10px;
+    position:sticky; top:0; z-index:40; background:rgba(10,14,33,0.88); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--card-line); }
+  .badge{ width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; position:relative;
+    background:linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0.02)); border:1px solid var(--card-line); cursor:pointer; }
+  .badge-spacer{ width:42px; height:42px; }
+  .badge-count{ position:absolute; top:-3px; right:-3px; background:#57D68D; color:#04220F; font-size:10px; font-weight:800;
+    min-width:17px; height:17px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 4px; }
+  .obj-date{ font-size:11px; color:rgba(255,255,255,0.7); margin-top:2px; }
+  .streak-badge{ display:inline-flex; align-items:center; gap:4px; background:rgba(245,197,66,0.14); border:1px solid rgba(245,197,66,0.4);
+    color:var(--gold); border-radius:999px; padding:8px 12px; font-size:13px; font-weight:700; white-space:nowrap; animation:pillPulse 2.4s ease-in-out infinite; }
+  h1{ font-size:20px; margin:0; font-weight:800; letter-spacing:0.02em; text-align:center; flex:1; }
+  @keyframes fillGrow{ from{ width:0; } to{ width:var(--w,0%); } }
+  @keyframes checkPop{ 0%{ transform:scale(0.55); } 55%{ transform:scale(1.22); } 100%{ transform:scale(1.05); } }
+  @keyframes cardRise{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+  @keyframes pillPulse{ 0%,100%{ box-shadow:0 0 0 rgba(245,197,66,0); } 50%{ box-shadow:0 0 14px var(--gold-glow); } }
+  @keyframes resourceDing{ 0%{ transform:scale(1); } 40%{ transform:scale(1.3) rotate(-6deg); } 100%{ transform:scale(1); } }
+  .streak-pill{ display:inline-flex; align-items:center; gap:6px; background:rgba(245,197,66,0.14); border:1px solid rgba(245,197,66,0.4);
+    color:var(--gold); border-radius:999px; padding:5px 12px; font-size:12px; font-weight:600; margin:0 auto 16px; width:fit-content; }
+  .sec-label{ font-size:11px; letter-spacing:0.08em; color:var(--ink-dim); margin:6px 0 10px; font-weight:700; }
+  .card{ background:var(--card); border:1px solid var(--card-line); border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,0.35); }
+  .task{ display:flex; align-items:center; gap:12px; padding:13px 14px; border-bottom:1px solid rgba(255,255,255,0.05); position:relative;
+    transition:transform 0.12s ease, background 0.2s ease; }
+  .task:last-child, .task.last{ border-bottom:none; }
+  .future-dot{ width:28px; text-align:center; font-size:16px; flex-shrink:0; opacity:0.8; }
+  .backlog-banner{ display:flex; align-items:center; gap:10px; padding:12px 14px; margin-top:12px;
+    background:rgba(245,197,66,0.10); border:1px solid rgba(245,197,66,0.35); border-radius:14px; cursor:pointer; }
+  .backlog-banner .bl-icon{ font-size:18px; }
+  .backlog-banner .bl-text{ flex:1; font-size:12.5px; color:var(--gold); font-weight:600; }
+  .backlog-banner .bl-go{ color:var(--gold); font-size:16px; }
+  .task:active{ transform:scale(0.98); background:rgba(255,255,255,0.03); }
+  .check{ width:28px; height:28px; border-radius:50%; border:2px solid var(--ink-dim); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:14px; color:#0A0E27; transition:transform 0.15s; }
+  .check.done{ background:radial-gradient(circle, #FFE9A8, var(--gold)); border-color:var(--gold); box-shadow:0 0 16px var(--gold-glow);
+    transform:scale(1.05); animation:checkPop 0.35s ease-out; }
+  .task-body{ flex:1; min-width:0; }
+  .task-label{ font-size:14.5px; font-weight:500; display:flex; align-items:center; gap:6px; }
+  .task-label.done{ color:var(--ink-dim); text-decoration:line-through; }
+  .task-sub{ font-size:11px; color:var(--ink-dim); margin-top:2px; }
+  .tag-chip{ display:inline-block; background:rgba(79,209,232,0.14); border:1px solid rgba(79,209,232,0.35); color:var(--cyan);
+    border-radius:999px; padding:1px 8px; font-size:10.5px; font-weight:600; }
+  .tag-chip.today-chip{ background:rgba(245,197,66,0.16); border-color:rgba(245,197,66,0.4); color:var(--gold); }
+  .del{ color:var(--pink); font-size:18px; padding:2px 6px; flex-shrink:0; opacity:0.8; transition:transform 0.12s ease; }
+  .del:active{ transform:scale(0.85); }
+  .empty{ padding:16px; color:var(--ink-dim); font-size:13px; }
+  .hint{ font-size:11px; color:var(--ink-dim); margin-top:8px; }
+  .big-date{ font-size:22px; font-weight:700; text-align:center; margin-bottom:14px; font-family:'Fredoka',sans-serif; }
+  .float-decor{ position:absolute; font-size:22px; opacity:0.35; pointer-events:none; z-index:0; }
+  .add-btn{ display:block; width:100%; background:rgba(79,209,232,0.12); border:1px solid rgba(79,209,232,0.4); color:var(--cyan);
+    border-radius:14px; padding:12px; text-align:center; font-size:13px; font-weight:600; margin-top:12px; transition:transform 0.12s ease, filter 0.15s ease; }
+  .add-btn:active{ transform:scale(0.97); filter:brightness(1.2); }
+  .focusbox{ padding:13px 14px; }
+  .focusbox input{ width:100%; border:none; background:transparent; color:var(--ink); font-size:14px; outline:none; font-family:'Fredoka',sans-serif; }
+  .focusbox input::placeholder{ color:var(--ink-dim); }
+  .base-line{ text-align:center; font-size:13px; color:var(--ink-dim); margin-bottom:14px; position:relative; z-index:1; }
+  .base-line b{ color:var(--ink); }
+  .resource-row{ display:flex; align-items:center; gap:10px; padding:9px 0; }
+  .resource-row:not(:last-child){ border-bottom:1px solid rgba(255,255,255,0.05); }
+  .resource-icon{ font-size:15px; width:20px; text-align:center; flex-shrink:0; }
+  .resource-icon.complete{ animation:resourceDing 0.5s ease-out; }
+  .resource-label{ font-size:12.5px; flex:1; }
+  .resource-track{ width:70px; background:rgba(255,255,255,0.08); border-radius:999px; height:6px; overflow:hidden; flex-shrink:0; }
+  .resource-fill{ height:100%; background:linear-gradient(90deg, var(--cyan), var(--green)); border-radius:999px; width:var(--w,0%); animation:fillGrow 0.7s ease-out; }
+  .resource-fill.complete{ background:linear-gradient(90deg, var(--green), #9CF5C4); }
+  .resource-frac{ font-size:11px; color:var(--ink-dim); width:32px; text-align:right; flex-shrink:0; }
+  .priority-card{ border-color:rgba(255,107,94,0.4) !important; box-shadow:0 0 18px rgba(255,107,94,0.15); }
+  .priority-card input{ color:var(--alert); font-weight:600; }
+  .priority-card input::placeholder{ color:rgba(255,107,94,0.6); }
+  .countdown{ margin-top:8px; padding-top:8px; border-top:1px dashed rgba(255,107,94,0.3); font-size:12.5px; color:var(--alert); text-align:center; font-weight:700; letter-spacing:0.02em; }
+  .label-alert{ color:var(--alert) !important; }
+
+  /* expanded node detail (inline in Star Map) */
+  .node-row.clickable{ cursor:pointer; }
+  .zone-detail{ margin:10px 0 6px 74px; border-radius:14px; padding:16px; text-align:left; position:relative; overflow:hidden; }
+  .zone-power{ background:rgba(255,255,255,0.1); border-radius:10px; padding:9px 12px; font-size:12px; color:rgba(255,255,255,0.9); }
+  .scan-btn{ margin-top:14px; background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.35); color:#fff; border-radius:10px; padding:9px 16px; font-size:13px; font-weight:600; }
+  .scan-btn:disabled{ opacity:0.5; }
+  .fact-list{ margin-top:12px; text-align:left; }
+  .fact-row{ font-size:12px; color:rgba(255,255,255,0.9); background:rgba(255,255,255,0.08); border-radius:8px; padding:8px 10px; margin-bottom:6px; }
+  .fact-row.locked{ color:rgba(255,255,255,0.4); }
+
+  /* star map */
+  .streak-banner{ text-align:center; margin-bottom:6px; }
+  .path{ position:relative; padding:10px 0 20px; }
+  .node-row{ display:flex; align-items:center; gap:14px; padding:10px 4px; position:relative; }
+  .node-row .connector{ position:absolute; left:29px; top:-14px; width:2px; height:24px; background:linear-gradient(var(--lock), var(--card-line)); }
+  .node-row:first-child .connector{ display:none; }
+  .node{ width:60px; height:60px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-size:24px; background:var(--card); border:2px solid var(--lock); position:relative; }
+  .node.unlocked{ border-color:var(--gold); background:radial-gradient(circle, rgba(245,197,66,0.25), rgba(245,197,66,0.05)); box-shadow:0 0 20px var(--gold-glow); }
+  .node-info{ flex:1; }
+  .node-name{ font-weight:700; font-size:14.5px; color:var(--ink-dim); }
+  .node-name.unlocked{ color:var(--ink); }
+  .node-sub{ font-size:11.5px; color:var(--ink-dim); margin-top:2px; }
+  .node-day{ font-size:11px; color:var(--ink-dim); font-weight:600; }
+  .progress-track{ background:rgba(255,255,255,0.08); border-radius:999px; height:8px; overflow:hidden; margin-top:6px; }
+  .progress-fill{ height:100%; background:linear-gradient(90deg, var(--cyan), var(--gold)); border-radius:999px; }
+  .decor{ position:absolute; font-size:20px; opacity:0.5; pointer-events:none; }
+
+  /* objectives */
+  .obj-card{ border-radius:18px; padding:16px; margin-bottom:14px; position:relative; overflow:hidden; border:1px solid var(--card-line); transition:opacity 0.3s ease; }
+  .obj-card.obj-complete{ opacity:0.72; border-color:rgba(87,214,141,0.55); box-shadow:0 0 16px rgba(87,214,141,0.18); }
+  .obj-card.obj-complete .obj-title{ color:#9CF5C4; }
+  .obj-card.celebrating{ opacity:1; animation:objPop 0.6s ease-out; box-shadow:0 0 28px rgba(87,214,141,0.55); border-color:#57D68D; }
+  @keyframes objPop{ 0%{ transform:scale(1); } 40%{ transform:scale(1.04); } 100%{ transform:scale(1); } }
+  @keyframes burstIn{ 0%{ opacity:0; transform:translateY(6px) scale(0.9); } 100%{ opacity:1; transform:translateY(0) scale(1); } }
+  .obj-burst{ position:absolute; top:0; left:0; right:0; background:rgba(87,214,141,0.92); color:#04220F; font-size:12px; font-weight:800;
+    letter-spacing:0.1em; text-align:center; padding:6px 8px; animation:burstIn 0.35s ease-out; z-index:3; }
+  .obj-top{ display:flex; justify-content:space-between; align-items:flex-start; }
+  .obj-title{ font-weight:800; font-size:15px; line-height:1.25; max-width:80%; }
+  .obj-icon{ width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; }
+  .obj-goal{ font-size:12.5px; color:rgba(237,239,250,0.85); margin-top:4px; }
+  .obj-progress-track{ background:rgba(255,255,255,0.18); border-radius:999px; height:8px; overflow:hidden; margin-top:12px; }
+  .obj-progress-fill{ height:100%; background:linear-gradient(90deg, #fff, var(--cyan)); border-radius:999px; }
+  .obj-footer{ display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:11.5px; color:rgba(237,239,250,0.85); }
+  .obj-stepper{ display:flex; align-items:center; gap:10px; }
+  .obj-stepper button{ width:26px; height:26px; border-radius:50%; border:1px solid rgba(255,255,255,0.35); background:rgba(255,255,255,0.1); color:#fff; font-size:14px; }
+  .obj-del{ position:absolute; top:10px; right:10px; color:rgba(255,255,255,0.6); font-size:16px; background:none; border:none; cursor:pointer; }
+  .sub-list{ margin-top:12px; }
+  .sub-row{ display:flex; align-items:center; gap:9px; padding:6px 0; }
+  .sub-check{ width:20px; height:20px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.55); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:11px; color:#1A1200; }
+  .sub-check.done{ background:#fff; border-color:#fff; }
+  .sub-label{ flex:1; font-size:13px; color:rgba(255,255,255,0.92); }
+  .sub-label.done{ text-decoration:line-through; color:rgba(255,255,255,0.55); }
+  .sub-del{ color:rgba(255,255,255,0.5); font-size:15px; padding:2px 4px; }
+  .sub-add-row{ margin-top:8px; border-top:1px dashed rgba(255,255,255,0.2); padding-top:8px; }
+  .sub-add-input{ width:100%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:8px;
+    color:#fff; font-size:13px; padding:7px 10px; font-family:'Fredoka',sans-serif; }
+  .sub-add-input::placeholder{ color:rgba(255,255,255,0.55); }
+
+  .overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.65); display:none; align-items:flex-end; justify-content:center; z-index:60; }
+  .overlay.open{ display:flex; }
+  .sheet{ background:#12162C; border-top:1px solid var(--card-line); padding:18px; width:100%; max-width:480px; max-height:85vh; overflow-y:auto; border-radius:18px 18px 0 0; }
+  .sheet h2{ font-size:18px; margin:0 0 12px; font-family:'Fredoka',sans-serif; font-weight:700; }
+  .field-label{ font-size:12px; color:var(--ink-dim); margin:14px 0 6px; font-weight:600; }
+  .sheet input[type=text], .sheet input[type=number]{ width:100%; border:1px solid var(--card-line); border-radius:10px; background:#1B2140; color:var(--ink); padding:9px 12px; font-size:14px; font-family:'Fredoka',sans-serif; }
+  .sheet select{ width:100%; border:1px solid var(--card-line); border-radius:10px; background:#1B2140; color:var(--ink); padding:9px 12px;
+    font-size:14px; font-family:'Fredoka',sans-serif; appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-image:linear-gradient(45deg, transparent 50%, var(--ink-dim) 50%), linear-gradient(135deg, var(--ink-dim) 50%, transparent 50%);
+    background-position:calc(100% - 18px) calc(50% + 2px), calc(100% - 13px) calc(50% + 2px); background-size:5px 5px, 5px 5px; background-repeat:no-repeat; }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ border:1px solid var(--card-line); border-radius:10px; padding:7px 12px; font-size:12.5px; color:var(--ink-dim); background:#1B2140; font-family:'Fredoka',sans-serif; }
+  .chip.selected{ border-color:var(--gold); background:rgba(245,197,66,0.14); color:var(--gold); }
+  .save-btn{ width:100%; background:linear-gradient(135deg, var(--gold), #E88A3A); color:#1A1200; border:none; border-radius:12px; padding:13px; font-weight:800; font-size:14px; margin-top:20px; }
+  .form-error{ color:var(--alert); font-size:12px; margin-top:12px; font-weight:600; }
+  .cancel-btn{ width:100%; background:none; border:none; color:var(--ink-dim); padding:12px; font-size:13px; }
+  .inline-row{ display:flex; align-items:center; gap:8px; margin-top:8px; }
+
+  /* left drawer */
+  .drawer-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0); z-index:70; pointer-events:none; transition:background 0.25s; }
+  .drawer-overlay.open{ background:rgba(0,0,0,0.6); pointer-events:auto; }
+  .drawer{ position:fixed; top:0; left:0; bottom:0; width:78%; max-width:290px; background:#12162C; border-right:1px solid var(--card-line);
+    padding:22px 16px; transform:translateX(-100%); transition:transform 0.25s ease; overflow-y:auto; }
+  .drawer-overlay.open .drawer{ transform:translateX(0); }
+  /* Hangar */
+  .loadout-row{ display:flex; gap:10px; }
+  .loadout-card{ flex:1; padding:14px 10px; text-align:center; }
+  .loadout-kind{ font-size:9.5px; letter-spacing:0.12em; color:var(--ink-dim); font-weight:700; }
+  .loadout-icon{ font-size:38px; line-height:1.25; }
+  .loadout-icon.locked{ opacity:0.35; }
+  .loadout-name{ font-size:13px; font-weight:700; }
+  .loadout-name.dim{ color:var(--ink-dim); font-weight:500; }
+  .gear-row{ display:flex; gap:12px; padding:12px 0; align-items:flex-start; }
+  .gear-row:not(:last-child){ border-bottom:1px solid rgba(255,255,255,0.06); }
+  .gear-icon{ font-size:26px; width:34px; text-align:center; flex-shrink:0; }
+  .gear-icon.locked{ opacity:0.4; }
+  .gear-body{ flex:1; min-width:0; }
+  .gear-name{ font-size:14px; font-weight:700; }
+  .gear-kind{ font-size:9px; letter-spacing:0.1em; color:var(--ink-dim); font-weight:700; margin-left:4px; }
+  .gear-desc{ font-size:12px; color:rgba(237,239,250,0.75); margin-top:2px; line-height:1.35; }
+  .gear-from{ font-size:10.5px; color:var(--ink-dim); margin-top:4px; }
+  .gear-next{ display:flex; gap:12px; padding:14px; align-items:flex-start; opacity:0.8; border-style:dashed !important; }
+  .drawer-callsign-row{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .onb{ position:fixed; inset:0; z-index:120; background:linear-gradient(180deg,#1a204a,#05070f); overflow:auto; }
+  .onb-inner{ max-width:440px; margin:0 auto; padding:48px 30px; min-height:100%; display:flex; flex-direction:column; justify-content:center; }
+  .onb-brand{ text-align:center; font-size:15px; font-weight:700; letter-spacing:0.22em;
+    color:var(--cyan); margin-bottom:22px; text-transform:uppercase; }
+  .onb-dots{ display:flex; gap:7px; justify-content:center; margin-bottom:40px; }
+  .onb-dots i{ width:7px; height:7px; border-radius:4px; background:rgba(255,255,255,0.22); transition:all .25s; }
+  .onb-dots i.on{ background:var(--gold); width:20px; }
+  .onb-icon{ font-size:60px; text-align:center; margin-bottom:20px; }
+  .onb-title{ font-size:25px; font-weight:700; text-align:center; margin-bottom:14px; }
+  .onb-body{ font-size:15px; color:var(--ink-dim); text-align:center; line-height:1.55; }
+  .onb-primary{ display:block; width:100%; background:var(--cyan); color:#04202A; border:none; border-radius:14px;
+    padding:15px; font-size:16px; font-weight:700; font-family:'Fredoka',sans-serif; margin-top:16px; cursor:pointer; }
+  .onb-primary span, .onb-secondary span{ display:block; font-size:11.5px; font-weight:400; margin-top:3px; opacity:0.8; }
+  .onb-secondary{ display:block; width:100%; background:transparent; color:var(--ink); border:1px solid var(--card-line);
+    border-radius:14px; padding:15px; font-size:15px; font-weight:600; font-family:'Fredoka',sans-serif; margin-top:12px; cursor:pointer; }
+  .onb-skip{ display:block; width:100%; background:none; border:none; color:var(--ink-dim); font-size:14px;
+    font-family:'Fredoka',sans-serif; padding:14px; cursor:pointer; }
+  .onb-choice-label{ font-size:11px; letter-spacing:0.12em; color:var(--ink-dim); font-weight:700; text-align:center; margin-top:40px; }
+  .drawer-action{ display:block; width:100%; text-align:left; background:none; border:none; color:var(--ink);
+    font-family:'Fredoka',sans-serif; font-size:15px; font-weight:500; padding:12px; border-radius:10px; cursor:pointer; }
+  /* ---------- Desktop / tablet ---------- */
+  @media (min-width: 760px){
+    /* Drawer becomes a permanent sidebar */
+    .drawer-overlay{ position:static; background:none !important; pointer-events:auto !important;
+      width:290px; flex-shrink:0; z-index:auto; }
+    .drawer{ position:static; transform:none !important; width:290px; height:100vh;
+      overflow-y:auto; border-right:1px solid var(--card-line); box-shadow:none; }
+    body{ display:flex; align-items:flex-start; }
+    .wrap{ flex:1; max-width:none; padding:0 0 60px; }
+    #app{ max-width:1100px; margin:0 auto; padding:0 32px; }
+    header{ margin:0 -32px 20px; padding:18px 32px 14px; }
+    /* The astronaut badge opens the drawer, which is always visible here */
+    #profileBtn{ display:none; }
+    header h1{ font-size:22px; }
+    .big-date{ font-size:26px; }
+
+    /* Two columns on Mission Control */
+    .mc-grid{ display:grid; grid-template-columns: 1fr 340px; gap:26px; align-items:start; }
+    .mc-side{ position:sticky; top:88px; }
+
+    .task{ padding:15px 18px; }
+    .task-label{ font-size:15.5px; }
+    .obj-card{ padding:20px; }
+    .node-row{ padding:12px 0; }
+    .zone-detail{ margin-left:74px; }
+    .undo-bar{ left:auto; right:32px; width:380px; }
+    .sheet{ max-width:520px; border-radius:20px; margin:auto; }
+    .overlay{ align-items:center !important; }
+  }
+  @media (min-width: 1400px){
+    #app{ max-width:1240px; }
+  }
+  /* Pointer devices get hover affordances; touch devices skip them */
+  @media (hover: hover){
+    .task:hover{ background:rgba(255,255,255,0.035); }
+    .drawer-item:hover, .drawer-action:hover{ background:rgba(255,255,255,0.06); }
+    .chip:hover{ border-color:var(--cyan); }
+    .add-btn:hover{ filter:brightness(1.15); }
+    .node-row.clickable:hover{ opacity:0.85; }
+    .scan-btn:hover{ background:rgba(255,255,255,0.24); }
+    .edit-btn:hover, .del:hover{ opacity:1; transform:scale(1.12); }
+  }
+  .drawer-brand{ font-size:13px; font-weight:700; letter-spacing:0.18em; color:var(--cyan);
+    text-transform:uppercase; margin-top:14px; }
+  .storage-note{ font-size:11px; color:var(--ink-dim); margin-top:10px; line-height:1.45; }
+  .storage-note b{ color:var(--green); font-weight:700; }
+  .storage-note.warn b{ color:var(--gold); }
+  .crash-bar{ position:fixed; left:12px; right:12px; bottom:14px; z-index:90; display:none;
+    background:rgba(255,107,94,0.95); color:#2A0A06; font-size:12.5px; font-weight:700;
+    padding:11px 14px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.45); }
+  .undo-bar{ position:fixed; left:14px; right:14px; bottom:22px; z-index:95; display:none; align-items:center; gap:14px;
+    background:#222B4F; border:1px solid var(--card-line); border-radius:14px; padding:13px 16px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.45); }
+  .undo-bar span{ flex:1; font-size:13px; font-weight:500; }
+  .undo-bar button{ background:none; border:none; color:var(--cyan); font-size:13px; font-weight:700;
+    letter-spacing:0.06em; font-family:'Fredoka',sans-serif; cursor:pointer; }
+  .edit-btn{ color:var(--cyan); font-size:15px; padding:2px 6px; flex-shrink:0; opacity:0.85; }
+  .drawer-callsign-row .badge{ width:38px; height:38px; font-size:18px; cursor:default; }
+  .drawer-callsign-row input{ flex:1; background:transparent; border:none; border-bottom:1px solid var(--card-line); color:var(--ink);
+    font-size:14px; padding:6px 2px; font-family:'Fredoka',sans-serif; outline:none; }
+  .drawer-hint{ font-size:10.5px; color:var(--ink-dim); margin:6px 0 18px; line-height:1.4; }
+  .drawer-nav{ display:flex; flex-direction:column; gap:3px; }
+  .drawer-item{ display:flex; align-items:center; gap:11px; width:100%; text-align:left; background:none; border:none;
+    color:var(--ink-dim); font-size:14.5px; padding:12px 10px; border-radius:10px; font-family:'Fredoka',sans-serif; }
+  .drawer-item.active{ background:rgba(245,197,66,0.12); color:var(--gold); font-weight:600; }
+  .drawer-divider{ height:1px; background:var(--card-line); margin:16px 0; }
+
+  /* Weekly goal met */
+  .weekly-met{ display:inline-flex; align-items:center; gap:4px; background:rgba(87,214,141,0.18);
+    border:1px solid rgba(87,214,141,0.5); color:var(--green); border-radius:999px; padding:1px 8px;
+    font-size:10.5px; font-weight:700; }
+  .weekly-prog{ color:var(--ink-dim); font-size:11px; }
+  .callsign-chip{ display:block; font-size:11px; font-weight:500; color:var(--cyan); letter-spacing:0.06em;
+    margin-top:2px; opacity:0.9; }
+  header h1 .callsign-chip{ font-size:11px; }
+  .header-titles{ flex:1; text-align:center; min-width:0; }
+  .header-titles h1{ font-size:20px; margin:0; font-weight:800; letter-spacing:0.02em; }
+  .archive-toggle{ display:block; width:100%; margin-top:18px; background:rgba(255,255,255,0.06);
+    border:1px dashed var(--card-line); color:var(--ink-dim); border-radius:12px; padding:12px;
+    font-family:'Fredoka',sans-serif; font-size:13px; font-weight:600; cursor:pointer; }
+  .archive-section{ margin-top:10px; }
+  .icon-btn{ background:none; border:none; cursor:pointer; font-family:inherit; padding:2px 6px; line-height:1; }
+  .icon-btn:focus-visible, .drawer-item:focus-visible, .add-btn:focus-visible, .chip:focus-visible,
+  .save-btn:focus-visible, .cancel-btn:focus-visible, .scan-btn:focus-visible, .badge:focus-visible{
+    outline:2px solid var(--cyan); outline-offset:2px; }
+  .badge[role=button]{ cursor:pointer; }
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation-duration:0.01ms !important; animation-iteration-count:1 !important;
+      transition-duration:0.01ms !important; scroll-behavior:auto !important; }
+  }
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="wrap" id="app"></div>
+
+<div id="onboarding" class="onb" style="display:none;">
+  <div class="onb-inner">
+    <div class="onb-brand">CosmoPlan</div>
+    <div class="onb-dots" id="onbDots"></div>
+    <div class="onb-icon" id="onbIcon"></div>
+    <div class="onb-title" id="onbTitle"></div>
+    <div class="onb-body" id="onbBody"></div>
+    <div id="onbNav">
+      <button class="onb-primary" id="onbNext">Next</button>
+      <button class="onb-skip" id="onbSkip">Skip</button>
+    </div>
+    <div id="onbChoices" style="display:none;">
+      <div class="onb-choice-label">HOW DO YOU WANT TO START?</div>
+      <button class="onb-primary" id="onbSeed">Start with example tasks
+        <span>12 common chores and routines you can edit or delete</span></button>
+      <button class="onb-secondary" id="onbEmpty">Start empty
+        <span>Add your own from scratch</span></button>
+    </div>
+  </div>
+</div>
+
+<div id="undoBar" class="undo-bar"><span id="undoText"></span><button id="undoBtn">UNDO</button></div>
+
+
+<div class="overlay" id="taskOverlay">
+  <div class="sheet">
+    <h2>New task</h2>
+    <div class="field-label">What is it?</div>
+    <input type="text" id="taskLabel" placeholder="e.g. Water the plants" />
+    <div class="field-label">Tag <span style="opacity:0.6; font-weight:400;">(optional — groups it with similar tasks)</span></div>
+    <select id="tagSelect"></select>
+    <div class="inline-row" id="newTagRow" style="display:none;">
+      <input type="text" id="taskTag" placeholder="Name your new tag" style="flex:1" />
+    </div>
+    <div class="field-label">Repeats</div>
+    <div class="chip-row" id="recChips"></div>
+    <div class="inline-row" id="onceDateRow" style="display:none;">
+      <span class="field-label" style="margin:0;">On</span>
+      <input type="date" id="onceDate" style="flex:1;" />
+    </div>
+    <div class="chip-row" id="customDaysRow" style="display:none; margin-top:8px;"></div>
+    <div class="inline-row" id="intervalRow" style="display:none;">
+      <span class="field-label" style="margin:0;">Every</span>
+      <input type="number" id="intervalDays" value="2" style="width:60px; text-align:center;" />
+      <span class="field-label" style="margin:0;">days</span>
+    </div>
+    <div class="inline-row" id="weeklyRow" style="display:none;">
+      <input type="number" id="weeklyTarget" value="2" style="width:60px; text-align:center;" />
+      <span class="field-label" style="margin:0;">times this week (any days — check off each time you do it)</span>
+    </div>
+    <div class="form-error" id="taskFormError" style="display:none;"></div>
+    <button class="save-btn" id="saveTaskBtn">Save task</button>
+    <button class="cancel-btn" id="cancelTaskBtn">Cancel</button>
+  </div>
+</div>
+
+<div class="overlay" id="objOverlay">
+  <div class="sheet">
+    <h2>New objective</h2>
+    <div class="field-label">Goal</div>
+    <input type="text" id="objLabel" placeholder="e.g. Learn to cook" />
+    <div class="field-label">Steps</div>
+    <div id="objStepsList"></div>
+    <div class="inline-row">
+      <input type="text" id="objStepInput" placeholder="e.g. Buy supplies" style="flex:1" />
+      <button class="chip" id="addObjStepBtn">Add</button>
+    </div>
+    <button class="save-btn" id="saveObjBtn">Save objective</button>
+    <button class="cancel-btn" id="cancelObjBtn">Cancel</button>
+  </div>
+</div>
+
+<div class="drawer-overlay" id="drawerOverlay">
+  <div class="drawer" id="drawerPanel">
+    <div class="drawer-callsign-row">
+      <div class="badge" id="drawerAvatar">🧑‍🚀</div>
+      <input type="text" id="profileName" placeholder="Callsign (e.g. Maverick)" />
+    </div>
+    <div class="drawer-hint">Progress is saved on this device right now. Cloud login and cross-device sync are coming soon.</div>
+    <div class="drawer-nav" id="drawerNav">
+      <button class="drawer-item" data-tab="today">🚀 Mission Control</button>
+      <button class="drawer-item" data-tab="starmap">⭐ Star Map</button>
+      <button class="drawer-item" data-tab="upcoming">📡 Future Missions</button>
+      <button class="drawer-item" data-tab="previous">🕘 Previous Missions</button>
+      <button class="drawer-item" data-tab="objectives">☄️ Objectives</button>
+      <button class="drawer-item" data-tab="hangar">🛠 Hangar</button>
+    </div>
+    <div class="drawer-brand">CosmoPlan</div>
+    <div class="storage-note" id="storageNote"></div>
+    <div class="drawer-divider"></div>
+    <button class="drawer-action" id="exportDataBtn" type="button">⬇ Export backup</button>
+    <button class="drawer-action" id="importDataBtn" type="button">⬆ Import backup</button>
+    <input type="file" id="importFileInput" accept="application/json,.json" style="display:none" />
+    <button class="save-btn" id="saveProfileBtn" style="margin-top:12px;">Save Callsign</button>
+  </div>
+</div>
+
+<script>
+// ---- starfield background ----
+(function(){
+  const c = document.getElementById('stars');
+  const ctx = c.getContext('2d');
+  function size(){ c.width = window.innerWidth; c.height = window.innerHeight; }
+  size();
+  const stars = Array.from({length:120}, ()=>({
+    x: Math.random()*c.width, y: Math.random()*c.height,
+    r: Math.random()*1.4+0.2, a: Math.random()*0.7+0.2
+  }));
+  ctx.fillStyle = '#fff';
+  stars.forEach(s=>{
+    ctx.globalAlpha = s.a;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7); ctx.fill();
+  });
+  window.addEventListener('resize', ()=>{ size(); ctx.globalAlpha=1;
+    stars.forEach(s=>{ ctx.globalAlpha = s.a; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7); ctx.fill(); }); });
+})();
+
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const RECURRENCE_OPTIONS = [
+  {type:'once', label:'One-off date'},
+  {type:'daily', label:'Every day'}, {type:'weekdays', label:'Weekdays'},
+  {type:'weekends', label:'Weekends'}, {type:'custom_days', label:'Specific days'},
+  {type:'interval', label:'Every N days'}, {type:'weekly_count', label:'X times/week'},
+];
+const BASES = [
+  {threshold:0,   name:'Cape Kennedy',        icon:'🚀', note:'Countdown complete. Wheels up.',       bg:'radial-gradient(ellipse at top, #4a2a12 0%, #1f1006 55%, #05070f 100%)'},
+  {threshold:3,   name:'ISS — Low Earth Orbit', icon:'🛰️', note:'First orbit established.',           bg:'radial-gradient(ellipse at top, #123a55 0%, #0a2036 55%, #05070f 100%)'},
+  {threshold:7,   name:'The Moon',             icon:'🌕', note:'One full week on station.',           bg:'radial-gradient(ellipse at top, #3a3a45 0%, #1c1c26 55%, #05070f 100%)'},
+  {threshold:14,  name:'Mars',                 icon:'🔴', note:'Two weeks — red planet reached.',     bg:'radial-gradient(ellipse at top, #5a2418 0%, #2a1108 55%, #05070f 100%)'},
+  {threshold:21,  name:'Deep Space Transit',   icon:'🛸', note:'Switched over to the starship.',      bg:'radial-gradient(ellipse at top, #2a1a4a 0%, #150d26 55%, #05070f 100%)'},
+  {threshold:30,  name:'Europa',               icon:'🧊', note:'Ice-crust survey underway.',          bg:'radial-gradient(ellipse at top, #16404a 0%, #0b2026 55%, #05070f 100%)'},
+  {threshold:45,  name:'Titan',                icon:'🟠', note:'Deep atmosphere, hazy skies.',        bg:'radial-gradient(ellipse at top, #5a4318 0%, #2a1f08 55%, #05070f 100%)'},
+  {threshold:60,  name:'Alpha Centauri',       icon:'✨', note:'First interstellar arrival.',         bg:'radial-gradient(ellipse at top, #2a2a5a 0%, #12122e 55%, #05070f 100%)'},
+  {threshold:90,  name:'Proxima b',            icon:'🌍', note:'Habitable-zone exoplanet.',           bg:'radial-gradient(ellipse at top, #1a4a2e 0%, #0c2417 55%, #05070f 100%)'},
+  {threshold:120, name:'Kepler-442b',          icon:'🪐', note:'Ringed world, fully charted.',        bg:'radial-gradient(ellipse at top, #3a1a5a 0%, #1c0d2e 55%, #05070f 100%)'},
+  {threshold:150, name:'TRAPPIST-1e',          icon:'🌑', note:'Red-dwarf twilight zone.',            bg:'radial-gradient(ellipse at top, #4a1a1a 0%, #240d0d 55%, #05070f 100%)'},
+  {threshold:180, name:'Gliese 667 Cc',        icon:'🌐', note:'A sky with three suns.',              bg:'radial-gradient(ellipse at top, #3a1a4a 0%, #1c0d24 55%, #05070f 100%)'},
+  {threshold:210, name:'HD 40307g',            icon:'🟢', note:'Super-Earth, fully surveyed.',        bg:'radial-gradient(ellipse at top, #1a4a1a 0%, #0d240d 55%, #05070f 100%)'},
+  {threshold:240, name:'55 Cancri e',          icon:'💎', note:'The diamond planet.',                 bg:'radial-gradient(ellipse at top, #2a2a2a 0%, #141414 55%, #05070f 100%)'},
+  {threshold:270, name:'WASP-12b',             icon:'🔥', note:'Scorched, oblong, extreme.',          bg:'radial-gradient(ellipse at top, #5a2a0a 0%, #2a1305 55%, #05070f 100%)'},
+  {threshold:300, name:'Nebula Outpost',       icon:'🌌', note:'Frontier research station.',          bg:'radial-gradient(ellipse at top, #3a1a5a 0%, #1c0d2e 55%, #05070f 100%)'},
+  {threshold:330, name:'The Frontier',         icon:'🌠', note:'Uncharted space ahead.',              bg:'radial-gradient(ellipse at top, #1a1a4a 0%, #0d0d24 55%, #05070f 100%)'},
+  {threshold:365, name:'Edge of the Known Map', icon:'🏆', note:'One full year. Legend status.',      bg:'radial-gradient(ellipse at top, #5a4a12 0%, #2a2306 55%, #05070f 100%)'},
+];
+function currentBaseFor(streak){
+  let cur = BASES[0];
+  for(const b of BASES){ if(streak >= b.threshold) cur = b; else break; }
+  return cur;
+}
+function nextBaseFor(streak){ return BASES.find(b => b.threshold > streak) || null; }
+
+const ZONE_FACTS = {
+  'Cape Kennedy': [
+    'Real launches here get scrubbed for weather more often than they fly.',
+    'The pad itself sits close enough to the ocean that launches are timed around tides and storms.',
+    'The Vehicle Assembly Building at Kennedy is one of the largest buildings in the world by volume.',
+    'Launch windows are set around wind shear and even local lightning risk, not just the outbound trajectory.',
+  ],
+  'ISS — Low Earth Orbit': [
+    'The ISS circles Earth about every 90 minutes — 16 sunrises a day.',
+    'It\u2019s the size of a football field but only pressurized about like a six-bedroom house.',
+    'It travels at roughly 17,500 mph (28,000 km/h) relative to Earth\u2019s surface.',
+    'When lit by the sun, it\u2019s the third-brightest object in the night sky after the Moon and Venus.',
+  ],
+  'The Moon': [
+    'The Moon is drifting away from Earth by about 3.8cm every year.',
+    'One lunar day (sunrise to sunrise) lasts about 29.5 Earth days.',
+    'The same side of the Moon always faces Earth, because it\u2019s tidally locked to us.',
+    'Moonquakes happen — some last for minutes, because dry lunar rock doesn\u2019t dampen vibrations the way wet Earth rock does.',
+  ],
+  'Mars': [
+    'A year on Mars is 687 Earth days — almost two of ours.',
+    'Mars has the largest dust storms in the solar system, sometimes covering the whole planet.',
+    'Mars is home to Olympus Mons, the tallest known volcano in the solar system — about 2.5x the height of Mount Everest.',
+    'A Martian day ("sol") is just over 24 hours 39 minutes, close enough to Earth\u2019s that colonists would barely notice.',
+  ],
+  'Deep Space Transit': [
+    'Past Mars, sunlight gets too weak for solar panels alone — this is where nuclear or fusion transit designs take over.',
+    'Radiation shielding, not fuel, becomes the hardest problem this far out.',
+    'Beyond roughly Jupiter\u2019s distance, most spacecraft power designs shift away from solar entirely.',
+    'The dramatic time-dilation effects of sci-fi only kick in near a meaningful fraction of light speed — far beyond any real current engine.',
+  ],
+  'Europa': [
+    'Europa\u2019s ice shell may hide a liquid ocean with more water than all of Earth\u2019s oceans combined.',
+    'Its surface is crisscrossed with reddish cracks scientists still can\u2019t fully explain.',
+    'That hidden ocean may stay liquid thanks to tidal heating — Jupiter\u2019s gravity constantly flexing the moon.',
+    'NASA\u2019s Europa Clipper mission was sent specifically to study whether that ocean could support life.',
+  ],
+  'Titan': [
+    'Titan has rivers, lakes, and rain — but made of liquid methane, not water.',
+    'Its atmosphere is so thick and gravity so low a human could glide with strapped-on wings.',
+    'Titan is the only moon in the solar system with a substantial atmosphere.',
+    'It\u2019s the second-largest moon in the solar system — bigger than the planet Mercury.',
+  ],
+  'Alpha Centauri': [
+    'Alpha Centauri is actually three stars, and the closest star system to our Sun.',
+    'At 4.37 light-years away, even our fastest current spacecraft would take tens of thousands of years to arrive.',
+    'The two brighter stars, Alpha Centauri A and B, orbit each other roughly every 80 years.',
+    'The Breakthrough Starshot project has proposed tiny light-sail probes that could theoretically reach it in about 20 years.',
+  ],
+  'Proxima b': [
+    'Proxima b orbits within its star\u2019s habitable zone — but the star flares violently.',
+    'It\u2019s likely tidally locked, meaning one side always faces its sun.',
+    'It completes a full orbit in just 11.2 days — far closer to its star than Mercury is to ours.',
+    'Because its star is a dim red dwarf, most of Proxima b\u2019s light would arrive as infrared, not visible light.',
+  ],
+  'Kepler-442b': [
+    'Kepler-442b is one of the most "Earth-similar" confirmed exoplanets by some habitability scores.',
+    'It\u2019s about 1,200 light-years from Earth — this trip is fictional, and that\u2019s the fun part.',
+    'It\u2019s roughly twice Earth\u2019s mass, orbiting a star cooler and dimmer than our Sun.',
+    'A year there lasts about 112 Earth days.',
+  ],
+  'TRAPPIST-1e': [
+    'TRAPPIST-1e is one of seven roughly Earth-sized planets circling a single small red star.',
+    'From its surface, neighboring planets would look larger than our Moon does from Earth.',
+    'The host star, TRAPPIST-1, is a red dwarf only about 9% the mass of our Sun.',
+    'All seven TRAPPIST-1 planets orbit closer to their star than Mercury orbits ours.',
+  ],
+  'Gliese 667 Cc': [
+    'Gliese 667 Cc orbits in a triple-star system — imagine three suns in the sky.',
+    'It receives about 90% of the sunlight Earth does, mostly as dim red light.',
+    'It\u2019s one of the closest known potentially habitable exoplanets, roughly 24 light-years away.',
+    'Its host star, Gliese 667 C, is actually the faintest of the three stars in the system.',
+  ],
+  'HD 40307g': [
+    'HD 40307g is a "super-Earth," roughly 7 times Earth\u2019s mass.',
+    'It orbits far enough from its star that it may not be tidally locked, unlike many small exoplanets.',
+    'Some orbital models place it within its star\u2019s habitable zone.',
+    'It was found using the radial-velocity method — detecting the tiny wobble it causes in its star.',
+  ],
+  '55 Cancri e': [
+    '55 Cancri e is so hot its surface may be an ocean of lava.',
+    'Some models suggest a third of its mass could be carbon — possibly diamond under pressure.',
+    'It orbits its star in just 18 hours, making its "year" shorter than a day on Earth.',
+    'It may be tidally locked, leaving one side permanently scorched and the other in darkness.',
+  ],
+  'WASP-12b': [
+    'WASP-12b is so close to its star it\u2019s slowly being torn apart and devoured.',
+    'It\u2019s stretched into an egg shape by the star\u2019s gravity.',
+    'It\u2019s one of the darkest known exoplanets, absorbing about 94% of the light that hits it.',
+    'Astronomers estimate it has only about 10 million years left before its star consumes it entirely.',
+  ],
+  'Nebula Outpost': [
+    'Nebulae are the nurseries of new stars, built from collapsing clouds of gas and dust.',
+    'Some nebulae glow from starlight; others are only visible blocking light from behind them.',
+    'The famous "Pillars of Creation" are part of the Eagle Nebula, a real star-forming region.',
+    'Some nebulae are actually the expanding remains of exploded stars, called supernova remnants.',
+  ],
+  'The Frontier': [
+    'This far out, there\u2019s no real map left — only estimates and probability.',
+    'Every "known" exoplanet this far away is really inferred from a star\u2019s wobble or a dip in its light.',
+    'Most confirmed exoplanets were found by watching a star dim slightly as a planet passes in front of it.',
+    'As of the mid-2020s, humanity has confirmed over 5,000 exoplanets — and the count keeps climbing.',
+  ],
+  'Edge of the Known Map': [
+    'You\u2019ve covered a fictional year of deep-space travel — real missions this far are still purely theoretical.',
+    'Every stop on this map, real or reached-for, started with someone just showing up the next day.',
+    'Voyager 1, the farthest human-made object, has been flying since 1977 and still hasn\u2019t left the Sun\u2019s gravitational influence.',
+    'Every real mission humanity has ever flown started as a plan on paper — the same way this one did.',
+  ],
+};
+function factsFor(base){ return ZONE_FACTS[base.name] || []; }
+function extractAccent(bg){ const m = bg.match(/#([0-9a-fA-F]{6})/); return m ? '#'+m[1] : '#4FD1E8'; }
+// Unique id generator. Date.now() alone collides when two records are created in
+// the same millisecond, which silently makes two subtasks share an id.
+let _idCounter = 0;
+function uid(prefix){
+  return prefix+'-'+Date.now().toString(36)+'-'+(_idCounter++).toString(36)+'-'+Math.random().toString(36).slice(2,7);
+}
+function streakBadge(streak){ return '<div class="streak-badge" aria-label="Streak '+streak+' days">🔥 '+streak+'</div>'; }
+function headerBlock(title, rightHtml){
+  const cs = profileName ? '<span class="callsign-chip">'+escapeHtml(profileName)+'</span>' : '';
+  const right = rightHtml != null ? rightHtml : streakBadge(window.__streak||0);
+  return '<header><div class="badge" id="profileBtn" role="button" tabindex="0" aria-label="Open menu">'+avatarIcon()+'</div>'+
+    '<div class="header-titles"><h1 class="display">'+title+'</h1>'+cs+'</div>'+right+'</header>';
+}
+function controlRoomSVG(base, streak, next, doneCount, totalCount, allDone){
+  const accent = allDone ? '#57D68D' : extractAccent(base.bg);
+  const panelX=1, panelY=10, panelW=598, panelH=219;
+  const cx = 300;
+  const trackX = 60, trackW = 480;
+  const prevT = base.threshold;
+  const nextT = next ? next.threshold : null;
+  const span = nextT ? (nextT - prevT) : 1;
+  const pct = nextT ? Math.min(100, Math.round(((streak - prevT)/span)*100)) : 100;
+  const barW = (trackW*pct/100).toFixed(0);
+  const nextLabel = allDone ? 'ALL SYSTEMS GO \u2713' : (next ? ('NEXT: '+next.name.toUpperCase()) : 'LEGEND STATUS');
+  const bracketL = 18;
+  const corner = (px,py,sx,sy) => '<path d="M'+(px+sx*bracketL)+' '+py+' L'+px+' '+py+' L'+px+' '+(py+sy*bracketL)+'" stroke="'+accent+'" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.9"/>';
+  const corners = corner(panelX,panelY,1,1) + corner(panelX+panelW,panelY,-1,1) + corner(panelX,panelY+panelH,1,-1) + corner(panelX+panelW,panelY+panelH,-1,-1);
+  return '<svg viewBox="0 0 600 230" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;">'+
+    '<defs>'+
+      '<linearGradient id="roomBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12141c"/><stop offset="1" stop-color="#05070f"/></linearGradient>'+
+      '<radialGradient id="panelGlow" cx="50%" cy="38%" r="65%"><stop offset="0%" stop-color="'+accent+'" stop-opacity="0.22"/><stop offset="60%" stop-color="'+accent+'" stop-opacity="0.05"/><stop offset="100%" stop-color="'+accent+'" stop-opacity="0"/></radialGradient>'+
+      '<radialGradient id="numGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="'+accent+'" stop-opacity="0.5"/><stop offset="100%" stop-color="'+accent+'" stop-opacity="0"/></radialGradient>'+
+      '<linearGradient id="barGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="'+accent+'"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0.9"/></linearGradient>'+
+      '<linearGradient id="fadeLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="'+accent+'" stop-opacity="0"/><stop offset="50%" stop-color="'+accent+'" stop-opacity="0.6"/><stop offset="100%" stop-color="'+accent+'" stop-opacity="0"/></linearGradient>'+
+      '<filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter>'+
+    '</defs>'+
+    '<rect width="600" height="230" fill="url(#roomBg)"/>'+
+    '<rect x="0" y="0" width="600" height="8" fill="#FF6B5E" opacity="0.5"/>'+
+    '<rect x="'+panelX+'" y="'+panelY+'" width="'+panelW+'" height="'+panelH+'" rx="0" fill="'+accent+'" opacity="0.35" filter="url(#softGlow)"/>'+
+    '<rect x="'+panelX+'" y="'+panelY+'" width="'+panelW+'" height="'+panelH+'" rx="0" fill="#0a1420"/>'+
+    '<rect x="'+panelX+'" y="'+panelY+'" width="'+panelW+'" height="'+panelH+'" rx="0" fill="url(#panelGlow)"/>'+
+    '<rect x="'+panelX+'" y="'+panelY+'" width="'+panelW+'" height="'+panelH+'" rx="0" fill="none" stroke="'+accent+'" stroke-width="2">'+
+      (allDone ? '<animate attributeName="stroke-width" values="2;3.2;2" dur="1.6s" repeatCount="indefinite"/>' : '')+
+    '</rect>'+
+    corners+
+    '<ellipse cx="'+cx+'" cy="94" rx="120" ry="52" fill="url(#numGlow)" filter="url(#softGlow)"/>'+
+    '<text x="'+cx+'" y="36" font-size="13" fill="'+accent+'" text-anchor="middle" font-family="Arial, sans-serif" font-weight="800" letter-spacing="2" stroke="'+accent+'" stroke-width="0.6" paint-order="stroke fill">'+base.name.toUpperCase()+'</text>'+
+    '<text x="'+cx+'" y="100" font-size="48" fill="#EDEFFA" text-anchor="middle" font-weight="700">'+streak+'</text>'+
+    '<text x="'+cx+'" y="122" font-size="11" fill="#C3CAE3" text-anchor="middle" font-weight="700" letter-spacing="2">DAY STREAK</text>'+
+    '<rect x="'+trackX+'" y="142" width="'+trackW+'" height="10" rx="5" fill="#1c2438"/>'+
+    '<rect x="'+trackX+'" y="142" width="'+barW+'" height="10" rx="5" fill="url(#barGrad)"><animate attributeName="width" from="0" to="'+barW+'" dur="0.8s" fill="freeze"/></rect>'+
+    '<text x="'+cx+'" y="170" font-size="10" fill="'+(allDone?'#57D68D':'#C3CAE3')+'" text-anchor="middle" font-weight="700" letter-spacing="0.5">'+nextLabel+'</text>'+
+    '<line x1="'+trackX+'" y1="187" x2="'+(trackX+trackW)+'" y2="187" stroke="url(#fadeLine)" stroke-width="1.5"/>'+
+    '<text x="'+trackX+'" y="210" font-size="12" fill="#C3CAE3" font-weight="700" letter-spacing="1">TASKS TODAY</text>'+
+    '<text x="'+(trackX+trackW)+'" y="210" font-size="16" fill="'+(doneCount>0&&doneCount===totalCount&&totalCount>0?'#57D68D':accent)+'" text-anchor="end" font-weight="700">'+doneCount+'/'+totalCount+'</text>'+
+    '</svg>';
+}
+const DECOR = ['☄️','🪐','🌌','⭐','🌠'];
+const OBJ_ICONS = ['🪐','🌌','🎓','🚀','🌍','🔬','🏆','📚','🛠️','💪'];
+// Alternating unlock track: even index = starship, odd index = suit
+const REWARDS = [
+  {type:'ship', icon:'🛰️', name:'Scout Pod',        desc:'Single-seat hopper. Barely more than a seat and a thruster.', hull:'#7d8598', accent:'#9AA3C4'},
+  {type:'suit', icon:'👨‍🚀', name:'Standard EVA',     desc:'Issue-white pressure suit. Reliable, unglamorous.',           accent:'#EDEFFA'},
+  {type:'ship', icon:'🚀', name:'Ranger MkI',        desc:'First real ship. Chemical burn, room for supplies.',          hull:'#c05a3e', accent:'#F5C542'},
+  {type:'suit', icon:'🧑‍🚀', name:'Surface Rig',      desc:'Reinforced boots and a dust-proof visor for rocky ground.',   accent:'#F5C542'},
+  {type:'ship', icon:'🛸', name:'Ion Clipper',       desc:'Ion drive. Slow to start, then it never stops.',              hull:'#4FD1E8', accent:'#4FD1E8'},
+  {type:'suit', icon:'🦺', name:'Hazard Shell',      desc:'Radiation-hardened plating for deep transit.',                accent:'#57D68D'},
+  {type:'ship', icon:'🛩️', name:'Void Runner',       desc:'Long-haul frame built for the outer system.',                 hull:'#6B4FC9', accent:'#9A7FE8'},
+  {type:'suit', icon:'🥽', name:'Deep Optics',       desc:'Wide-spectrum visor. You see what others miss.',              accent:'#4FD1E8'},
+  {type:'ship', icon:'🚁', name:'Nova Frigate',      desc:'Armored hull, redundant everything. Built to survive.',       hull:'#E85D8A', accent:'#E85D8A'},
+  {type:'suit', icon:'⚡', name:'Powered Exo',       desc:'Servo-assisted frame. Heavy work feels light.',               accent:'#F5C542'},
+  {type:'ship', icon:'✈️', name:'Starbreaker',       desc:'Fusion core. The first ship that could really leave.',        hull:'#57D68D', accent:'#9CF5C4'},
+  {type:'suit', icon:'👑', name:'Commander Colors',  desc:'Reserved for whoever actually finishes what they start.',     accent:'#F5C542'},
+];
+function rewardForIndex(i){ return REWARDS[i % REWARDS.length]; }
+function unlockedRewards(){
+  return objectives.filter(o=>o.completedAt)
+    .sort((a,b)=> new Date(a.completedAt) - new Date(b.completedAt))
+    .map((o,i)=> ({...rewardForIndex(o.rewardIndex != null ? o.rewardIndex : i), objective:o.label, at:o.completedAt}));
+}
+function currentShip(){ const s = unlockedRewards().filter(r=>r.type==='ship'); return s.length ? s[s.length-1] : null; }
+function currentSuit(){ const s = unlockedRewards().filter(r=>r.type==='suit'); return s.length ? s[s.length-1] : null; }
+function avatarIcon(){ const s = currentSuit(); return s ? s.icon : '🧑‍🚀'; }
+const OBJ_GRADIENTS = [
+  'linear-gradient(135deg,#C1554A,#5A2430)', 'linear-gradient(135deg,#6B4FC9,#2E1E52)',
+  'linear-gradient(135deg,#3E7FE0,#1B3661)', 'linear-gradient(135deg,#2FA679,#164733)',
+  'linear-gradient(135deg,#D98A3D,#5E3A14)',
+];
+const SEED_TASKS = [
+  {id:'dishes', label:'Wash / put away dishes', time:'EVE', tag:'Chores', recurrence:{type:'daily'}},
+  {id:'tidy', label:'Tidy common areas', time:'EVE', tag:'Chores', recurrence:{type:'daily'}},
+  {id:'make-bed', label:'Make the bed', time:'0700', tag:'Chores', recurrence:{type:'daily'}},
+  {id:'vacuum', label:'Vacuum / sweep floors', time:'MID', tag:'Chores', recurrence:{type:'weekly_count', weeklyTarget:2}},
+  {id:'laundry', label:'Run a load of laundry', time:'MID', tag:'Chores', recurrence:{type:'weekly_count', weeklyTarget:2}},
+  {id:'bathroom', label:'Clean bathroom', time:'MID', tag:'Chores', recurrence:{type:'custom_days', days:[6]}},
+  {id:'vitamins', label:'Take daily vitamins', time:'0700', tag:'Health', recurrence:{type:'daily'}},
+  {id:'trash', label:'Take out trash / recycling', time:'MID', tag:'Chores', recurrence:{type:'custom_days', days:[1,4]}},
+  {id:'yard', label:'Yard / outdoor upkeep', time:'MID', tag:'Outdoor', recurrence:{type:'weekends'}},
+  {id:'groceries', label:'Grocery run', time:'MID', tag:'Errands', recurrence:{type:'custom_days', days:[0]}},
+  {id:'carcheck', label:'Check car fuel & tire pressure', time:'MID', tag:'Errands', recurrence:{type:'custom_days', days:[6]}},
+  {id:'inbox', label:'Clear inbox / plan the day', time:'0800', tag:'Work', recurrence:{type:'weekdays'}},
+];
+const SEED_OBJECTIVES = [];
+
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+function dateKey(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function weekKey(d){ const date=new Date(d); date.setHours(0,0,0,0); const dow=(date.getDay()+6)%7; date.setDate(date.getDate()-dow); return dateKey(date); }
+/** Local Y-M-D day count — never parse YYYY-MM-DD via Date(string) (UTC). */
+function toLocalDay(x){
+  if(x instanceof Date) return new Date(x.getFullYear(), x.getMonth(), x.getDate());
+  const s = String(x).slice(0,10);
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, (m||1)-1, d||1);
+}
+function daysBetween(a,b){ return Math.round((toLocalDay(b) - toLocalDay(a))/86400000); }
+function escapeHtml(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function appliesToday(task, date){
+  const dow = date.getDay(); const r = task.recurrence || {type:'daily'};
+  switch(r.type){
+    case 'once': return r.date === dateKey(date);
+    case 'daily': return true;
+    case 'weekdays': return dow>=1 && dow<=5;
+    case 'weekends': return dow===0 || dow===6;
+    case 'custom_days': return (r.days||[]).includes(dow);
+    case 'interval': { const anchor = r.anchor ? new Date(r.anchor) : new Date(task.createdAt || date); const diff = daysBetween(anchor, date); return diff>=0 && diff % (r.intervalDays||1) === 0; }
+    case 'weekly_count': return true;
+    default: return true;
+  }
+}
+/**
+ * Storage layer.
+ *
+ * Tries three backends in order and uses the first that actually works:
+ *   1. localStorage  — real per-device persistence. Survives closing the page
+ *                      and restarting the phone. This is the one we want.
+ *   2. window.storage — the host app's API, where available.
+ *   3. memory        — last resort so the app still runs for the session.
+ *
+ * Each candidate is probed with a real write/read before being trusted; some
+ * environments expose an API that throws on every call, and a backend that
+ * silently drops writes is worse than no backend at all.
+ */
+const KEY_PREFIX = 'cosmoplan:';
+const memStore = {};
+let backend = null;   // 'local' | 'host' | 'memory'
+
+const memGet = (k) => (k in memStore ? {key:k, value:memStore[k]} : null);
+const memSet = (k,v) => { memStore[k]=v; return {key:k, value:v}; };
+
+async function probeStorage(){
+  if(backend) return backend;
+
+  // 1. localStorage — verify a full round trip, not just that the object exists
+  try{
+    const probe = KEY_PREFIX + '__probe';
+    window.localStorage.setItem(probe, 'ok');
+    if(window.localStorage.getItem(probe) === 'ok'){
+      window.localStorage.removeItem(probe);
+      backend = 'local';
+      return backend;
+    }
+  }catch(e){ /* blocked, private mode, or sandboxed */ }
+
+  // 2. host-provided storage
+  try{
+    if(window.storage){
+      await window.storage.set('__probe', '1');
+      backend = 'host';
+      return backend;
+    }
+  }catch(e){ /* present but non-functional */ }
+
+  // 3. session-only
+  backend = 'memory';
+  return backend;
+}
+
+function storageLabel(){
+  if(backend === 'local')  return 'Saved on this device';
+  if(backend === 'host')   return 'Saved';
+  return 'This session only';
+}
+
+async function getJSON(key, fallback){
+  await probeStorage();
+  try{
+    let r;
+    if(backend === 'local'){
+      const v = window.localStorage.getItem(KEY_PREFIX + key);
+      r = v === null ? null : {key, value:v};
+    } else if(backend === 'host'){
+      r = await window.storage.get(key);
+    } else {
+      r = memGet(key);
+    }
+    return r ? JSON.parse(r.value) : fallback;
+  } catch(e){ return fallback; }
+}
+/**
+ * Persist a value. Returns true on success, false on failure.
+ * This used to swallow every error, which meant a failed write looked identical
+ * to a successful one — tasks silently never saved and the app showed an empty
+ * list forever. Failures are now surfaced to the user.
+ */
+async function setJSON(key, value){
+  await probeStorage();
+  const payload = JSON.stringify(value);
+  try{
+    if(backend === 'local'){ window.localStorage.setItem(KEY_PREFIX + key, payload); return true; }
+    if(backend === 'host'){ await window.storage.set(key, payload); return true; }
+    // In-memory is session-only — never report as durable save success.
+    memSet(key, payload); return false;
+  }catch(e){
+    // A backend that worked and then failed (quota, eviction): keep the session
+    // alive in memory, but do not claim a durable save.
+    backend = 'memory';
+    memSet(key, payload);
+    updateStorageNote();
+    return false;
+  }
+}
+
+let tasks, objectives, dayState, weekData, today, activeTab='today';
+let allDays = {};
+let savedTags = [];
+let expandedIndex = null;
+let expandedIndexInitialized = false;
+let revealedFacts = {};
+let profileName = '';
+let showObjArchive = false;
+
+async function ensureSeeded(){
+  const onboarded = await getJSON('onboarded', false);
+  if(!onboarded) return;   // onboarding decides whether to seed
+  const seeded = await getJSON('seeded', null);
+  const existing = await getJSON('tasks', null);
+  // Self-heal: if the seed flag was set but the tasks write failed, the app is
+  // stuck showing nothing forever. Re-seed when the flag is set but no task
+  // record exists at all (an empty [] means the user deleted them — leave it).
+  if(seeded && existing !== null) return;
+  const okTasks = await setJSON('tasks', SEED_TASKS);
+  await setJSON('objectives', SEED_OBJECTIVES);
+  if(okTasks) await setJSON('seeded', true);  // flag only after data is safe
+}
+async function loadAll(){
+  today = new Date();
+  tasks = await getJSON('tasks', []);
+  // migrate old Kitchen/Home tags into the consolidated Chores tag
+  const TAG_MIGRATIONS = {Kitchen:'Chores', Home:'Chores'};
+  let tagsMigrated = false;
+  tasks = tasks.map(t=>{
+    if(t.tag && TAG_MIGRATIONS[t.tag]){ tagsMigrated = true; return {...t, tag: TAG_MIGRATIONS[t.tag]}; }
+    return t;
+  });
+  if(tagsMigrated) await setJSON('tasks', tasks);
+  objectives = await getJSON('objectives', []);
+  // migrate any legacy objective shapes to the subtasks model
+  objectives = objectives.map((o,i)=>{
+    if('subtasks' in o) return o;
+    const icon = o.icon || OBJ_ICONS[i%OBJ_ICONS.length];
+    const gradient = o.gradient || OBJ_GRADIENTS[i%OBJ_GRADIENTS.length];
+    return {id:o.id, label:o.label, icon, gradient, subtasks:[]};
+  });
+  // Days live in ONE record. Previously each day was its own storage key, which
+  // meant reading a backlog cost one request per day and hit rate limits.
+  allDays = await getJSON('days', null);
+  if(!allDays){
+    allDays = {};
+    const legacy = await getJSON('day:'+dateKey(today), null);
+    if(legacy) allDays[dateKey(today)] = legacy;
+    await setJSON('days', allDays);
+  }
+  dayState = ensureDay(dateKey(today));
+  weekData = await getJSON('week:'+weekKey(today), {});
+  revealedFacts = await getJSON('zonefacts', {});
+  savedTags = await getJSON('savedTags', null) || Array.from(new Set(tasks.map(t=>t.tag).filter(Boolean))).sort();
+  profileName = await getJSON('profileName', '') || '';
+}
+function scheduledToday(){
+  return tasks.filter(t => appliesToday(t, today)).map(t=>{
+    if(t.recurrence && t.recurrence.type==='weekly_count'){
+      const count = weekData[t.id] || 0;
+      return {...t, weeklyCount:count, weeklyMet: count >= (t.recurrence.weeklyTarget||1)};
+    }
+    return t;
+  });
+}
+const EMPTY_DAY = {done:{}, focus:''};
+/** Read-only view of a day. Does NOT create a record — avoids persisting
+ *  empty entries for every day merely inspected by the streak/backlog scan. */
+function dayFor(dk){
+  const d = allDays[dk];
+  if(!d) return EMPTY_DAY;
+  if(!d.done) d.done = {};
+  return d;
+}
+/** Writable day record — creates it on demand. */
+function ensureDay(dk){
+  if(!allDays[dk]) allDays[dk] = {done:{}, focus:''};
+  if(!allDays[dk].done) allDays[dk].done = {};
+  return allDays[dk];
+}
+function scheduledOn(date){
+  return tasks.filter(t => appliesToday(t, date));
+}
+/** 'complete' | 'incomplete' | 'neutral' (no non-weekly tasks that day). */
+function dayStreakStatus(date){
+  const dstate = dayFor(dateKey(date));
+  const scheduled = tasks.filter(t => appliesToday(t, date) && !(t.recurrence && t.recurrence.type==='weekly_count'));
+  if(scheduled.length === 0) return 'neutral';
+  return scheduled.every(t => dstate.done && dstate.done[t.id]) ? 'complete' : 'incomplete';
+}
+function isDayComplete(date){ return dayStreakStatus(date) === 'complete'; }
+function computeStreak(){
+  let streak = 0;
+  const cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  // Incomplete today does not zero the streak — start counting from yesterday.
+  if(dayStreakStatus(cursor) === 'incomplete'){
+    cursor.setDate(cursor.getDate()-1);
+  }
+  for(let i=0;i<400;i++){
+    const status = dayStreakStatus(cursor);
+    if(status === 'incomplete') break;
+    if(status === 'complete') streak++;
+    // neutral (e.g. weekend for weekday-only users): pass through
+    cursor.setDate(cursor.getDate()-1);
+  }
+  return streak;
+}
+const BACKLOG_DAYS = 7;
+/**
+ * Missed tasks, newest day first.
+ *
+ * Recurring tasks are capped to the last BACKLOG_DAYS days — an unlimited
+ * recurring backlog becomes an unusable guilt pile. One-off dated tasks are
+ * NEVER capped: a specific commitment like "Dentist appointment" must not
+ * silently vanish just because it is old. Without this, a missed one-off older
+ * than a week disappeared from every screen and looked deleted.
+ */
+function backlog(){
+  const byDay = {};
+  const add = (dk, task) => { (byDay[dk] = byDay[dk] || []).push(task); };
+  const tk = dateKey(today);
+
+  // Recent window: every kind of missed task
+  for(let i=1;i<=BACKLOG_DAYS;i++){
+    const d = new Date(today); d.setDate(d.getDate()-i);
+    const dk = dateKey(d);
+    const dstate = dayFor(dk);
+    scheduledOn(d)
+      .filter(t => !(t.recurrence && t.recurrence.type==='weekly_count')
+                && !dstate.done[t.id]
+                && !(dstate.skipped && dstate.skipped[t.id]))
+      .forEach(t => add(dk, t));
+  }
+  // Older one-off dates: always surfaced, however long ago
+  const cutoff = dateKey(new Date(today.getTime() - BACKLOG_DAYS*86400000));
+  tasks.forEach(t => {
+    if(!t.recurrence || t.recurrence.type!=='once') return;
+    const dk = t.recurrence.date;
+    if(dk >= tk) return;        // today or future — not missed
+    if(dk >= cutoff) return;    // already covered by the recent window
+    const ds = dayFor(dk);
+    if(ds.done[t.id]) return;
+    if(ds.skipped && ds.skipped[t.id]) return;
+    add(dk, t);
+  });
+
+  return Object.keys(byDay).sort().reverse().map(dk=>{
+    const [y,m,dd] = dk.split('-').map(Number);
+    return {date:new Date(y, m-1, dd), dk, tasks:byDay[dk]};
+  });
+}
+/** One-off tasks dated after today, soonest first. */
+function upcoming(){
+  const tk = dateKey(today);
+  return tasks
+    .filter(t => t.recurrence && t.recurrence.type==='once' && t.recurrence.date > tk)
+    .sort((a,b)=> a.recurrence.date.localeCompare(b.recurrence.date));
+}
+function allTags(){
+  const set = new Set();
+  tasks.forEach(t=>{ if(t.tag) set.add(t.tag); });
+  return Array.from(set).sort();
+}
+function computeTagSummary(){
+  const scheduled = scheduledToday();
+  const map = {};
+  scheduled.forEach(t=>{
+    const tag = (t.tag || 'General').trim() || 'General';
+    if(!map[tag]) map[tag] = {tag, done:0, total:0};
+    map[tag].total++;
+    if(dayState.done[t.id]) map[tag].done++;
+  });
+  return Object.values(map);
+}
+const DEFAULT_BG = 'radial-gradient(ellipse at 50% -10%, #160B2E 0%, #0A0E27 55%, #05070F 100%)';
+function updateCountdown(){
+  const el = document.getElementById('countdownVal');
+  if(!el) return;
+  const now = new Date();
+  const midnight = new Date(now); midnight.setHours(24,0,0,0);
+  const diff = Math.max(0, midnight - now);
+  const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+  el.textContent = 'T-'+pad(h)+':'+pad(m)+':'+pad(s)+' UNTIL LAUNCH WINDOW CLOSES';
+}
+setInterval(updateCountdown, 1000);
+
+async function toggleTask(task){
+  dayState.done[task.id] = !dayState.done[task.id];
+  if(!dayState.done[task.id]) delete dayState.done[task.id];
+  await setJSON('days', allDays);
+  if(task.recurrence && task.recurrence.type==='weekly_count'){
+    const wk = weekKey(today);
+    const wdata = await getJSON('week:'+wk, {});
+    wdata[task.id] = Math.max(0, (wdata[task.id]||0) + (dayState.done[task.id] ? 1 : -1));
+    await setJSON('week:'+wk, wdata);
+    weekData = wdata;
+  }
+  render();
+}
+async function deleteTask(id){
+  const index = tasks.findIndex(t=>t.id===id);
+  const removed = tasks[index];
+  tasks = tasks.filter(t=>t.id!==id);
+  await setJSON('tasks', tasks);
+  render();
+  if(removed) showUndo('Deleted \u201c'+removed.label+'\u201d', removed, index);
+}
+function isObjComplete(o){ return o.subtasks.length > 0 && o.subtasks.every(s=>s.done); }
+let justCompletedObjId = null;
+function syncObjCompletion(o){
+  const complete = isObjComplete(o);
+  if(complete && !o.completedAt){
+    const nextIndex = objectives.filter(x=>x.completedAt && x.id!==o.id).length;
+    return {...o, completedAt: new Date().toISOString(), rewardIndex: nextIndex};
+  }
+  if(!complete && o.completedAt){ const {completedAt, rewardIndex, ...rest} = o; return rest; }
+  return o;
+}
+async function toggleSubtask(objId, subId){
+  objectives = objectives.map(o => {
+    if(o.id!==objId) return o;
+    const wasComplete = isObjComplete(o);
+    const updated = syncObjCompletion({...o, subtasks: o.subtasks.map(s => s.id===subId ? {...s, done:!s.done} : s)});
+    if(!wasComplete && isObjComplete(updated)) justCompletedObjId = o.id;
+    return updated;
+  });
+  await setJSON('objectives', objectives); render();
+  if(justCompletedObjId){ const id = justCompletedObjId; setTimeout(()=>{ if(justCompletedObjId===id){ justCompletedObjId=null; render(); } }, 5000); }
+}
+async function addSubtaskToObjective(objId, label){
+  if(!label.trim()) return;
+  objectives = objectives.map(o => o.id===objId ? syncObjCompletion({...o, subtasks:[...o.subtasks, {id:uid('sub'), label:label.trim(), done:false}]}) : o);
+  await setJSON('objectives', objectives); render();
+}
+async function deleteSubtask(objId, subId){
+  objectives = objectives.map(o => o.id===objId ? syncObjCompletion({...o, subtasks:o.subtasks.filter(s=>s.id!==subId)}) : o);
+  await setJSON('objectives', objectives); render();
+}
+async function deleteObjective(id){
+  const index = objectives.findIndex(o=>o.id===id);
+  if(index < 0) return;
+  const removed = objectives[index];
+  if(!confirm('Delete objective “'+(removed.label||'')+'”? This cannot be undone from the list, but you can Undo for a few seconds.')) return;
+  objectives = objectives.filter(o=>o.id!==id);
+  await setJSON('objectives', objectives);
+  render();
+  showObjUndo('Deleted objective “'+removed.label+'”', removed, index);
+}
+let objUndoPayload = null;
+function showObjUndo(message, obj, index){
+  objUndoPayload = {obj, index};
+  undoPayload = null; // mutual exclusion with task undo
+  document.getElementById('undoText').textContent = message;
+  document.getElementById('undoBar').style.display = 'flex';
+  clearTimeout(undoTimer);
+  undoTimer = setTimeout(hideUndo, 5000);
+}
+async function setFocusText(text){ dayState.focus = text; await setJSON('days', allDays); }
+
+function todayPage(){
+  const scheduled = scheduledToday();
+  const streak = window.__streak || 0;
+  const base = currentBaseFor(streak);
+  const next = nextBaseFor(streak);
+  const doneCount = scheduled.filter(t=>dayState.done[t.id]).length;
+  const allDone = scheduled.length>0 && doneCount===scheduled.length;
+  const tagSummary = computeTagSummary();
+  let html = '<div class="float-decor" style="top:2px; left:-6px;">☄️</div><div class="float-decor" style="top:210px; right:-8px;">⭐</div>';
+  html += headerBlock('MISSION CONTROL');
+  html += '<div class="big-date">'+DAY_NAMES[today.getDay()]+', '+MONTHS[today.getMonth()]+' '+today.getDate()+'</div>';
+  html += '<div class="mc-grid"><div class="mc-main">';
+  html += '<div class="card" style="overflow:hidden; margin-bottom:14px; position:relative; z-index:1; padding:0; animation:cardRise 0.4s ease-out;">'+controlRoomSVG(base, streak, next, doneCount, scheduled.length, allDone)+
+    '<div style="padding:8px 12px; text-align:center; font-size:11px; letter-spacing:0.08em; color:var(--ink-dim); border-top:1px solid var(--card-line); background:var(--card);">'+
+    (currentShip() ? currentShip().icon+' '+currentShip().name.toUpperCase()+' \u00b7 ' : '')+base.name.toUpperCase()+'</div></div>';
+  if(scheduled.length>0){
+    html += '<div class="sec-label">TODAY\u2019S ORBITS</div><div class="card" style="position:relative; z-index:1; animation:cardRise 0.4s ease-out 0.05s both;">';
+    scheduled.forEach(t=>{
+      const done = !!dayState.done[t.id];
+      const todayOnly = t.recurrence && t.recurrence.type==='once';
+      let weeklyHtml = '';
+      if(t.recurrence && t.recurrence.type==='weekly_count'){
+        const cur = t.weeklyCount||0, tgt = t.recurrence.weeklyTarget||1;
+        weeklyHtml = t.weeklyMet
+          ? ' <span class="weekly-met" title="Weekly goal met">✓ '+cur+'/'+tgt+' this week</span>'
+          : ' <span class="weekly-prog">'+cur+' of '+tgt+' this week — keep going</span>';
+      }
+      html += '<div class="task" data-task="'+escapeHtml(t.id)+'" role="button" tabindex="0">';
+      html += '<div class="check'+(done?' done':'')+'" aria-hidden="true">'+(done?'✓':'')+'</div>';
+      html += '<div class="task-body"><div class="task-label'+(done?' done':'')+'">'+escapeHtml(t.label)+'</div>';
+      html += '<div class="task-sub">'+(t.tag ? '<span class="tag-chip">'+escapeHtml(t.tag)+'</span>' : '')+(todayOnly ? ' <span class="tag-chip today-chip">today only</span>' : '')+weeklyHtml+'</div></div>';
+      html += '<button type="button" class="edit-btn icon-btn" data-edit="'+escapeHtml(t.id)+'" aria-label="Edit task">✎</button>';
+      html += '<button type="button" class="del icon-btn" data-del="'+escapeHtml(t.id)+'" aria-label="Delete task">×</button></div>';
+    });
+    html += '</div><div class="hint">Tap to check off · ✎ to edit · × to delete</div>';
+  } else {
+    html += '<div class="card" style="position:relative; z-index:1;"><div class="empty">No orbits scheduled for today. Add a task below, or enjoy the clear skies.</div></div>';
+  }
+  html += '<button type="button" class="add-btn" id="openAddTask">🚀 Add Task</button>';
+  html += '</div><div class="mc-side">';
+  const blCount = backlog().reduce((n,g)=>n+g.tasks.length,0);
+  if(blCount>0){
+    html += '<div class="backlog-banner" id="goPrevious" role="button" tabindex="0"><div class="bl-icon">🕘</div>'+
+      '<div class="bl-text">'+blCount+' task'+(blCount===1?'':'s')+' missed in the last 7 days</div>'+
+      '<div class="bl-go">›</div></div>';
+  }
+  const upCount = upcoming().length;
+  if(upCount>0){
+    html += '<div class="backlog-banner" id="goUpcoming" role="button" tabindex="0" style="background:rgba(79,209,232,0.10); border-color:rgba(79,209,232,0.35);">'+
+      '<div class="bl-icon">📡</div>'+
+      '<div class="bl-text" style="color:var(--cyan);">'+upCount+' mission'+(upCount===1?'':'s')+' scheduled ahead</div>'+
+      '<div class="bl-go" style="color:var(--cyan);">›</div></div>';
+  }
+  if(tagSummary.length){
+    html += '<div class="sec-label" style="margin-top:22px;">TODAY BY TAG</div><div class="card" style="padding:2px 14px; position:relative; z-index:1; animation:cardRise 0.4s ease-out 0.1s both;">';
+    tagSummary.forEach(m=>{
+      const pct = m.total ? Math.round((m.done/m.total)*100) : 0;
+      const complete = m.total>0 && m.done===m.total;
+      html += '<div class="resource-row"><div class="resource-label">'+escapeHtml(m.tag)+'</div>';
+      html += '<div class="resource-track"><div class="resource-fill'+(complete?' complete':'')+'" style="--w:'+pct+'%;"></div></div>';
+      html += '<div class="resource-frac">'+m.done+'/'+m.total+'</div></div>';
+    });
+    html += '</div>';
+  }
+  html += '<div class="float-decor" style="top:520px; left:-4px;">🪐</div>';
+  html += '<div class="sec-label label-alert" style="margin-top:22px; position:relative; z-index:1;">🚨 LAUNCH DIRECTIVE</div>';
+  html += '<div class="card focusbox priority-card" style="position:relative; z-index:1;">';
+  html += '<input type="text" id="focusInput" placeholder="The one thing you can\u2019t let slip today\u2026" value="'+escapeHtml(dayState.focus||'')+'" />';
+  html += '<div class="countdown" id="countdownVal">T-00:00:00</div>';
+  html += '</div>';
+  html += '</div></div>';   // close .mc-side and .mc-grid
+  return html;
+}
+
+function starmapPage(){
+  const streak = window.__streak || 0;
+  const current = currentBaseFor(streak);
+  const next = nextBaseFor(streak);
+  const prevThreshold = current.threshold;
+  if(!expandedIndexInitialized){ expandedIndex = BASES.findIndex(b=>b.threshold===current.threshold); expandedIndexInitialized = true; }
+  const scheduled = scheduledToday();
+  const doneCount = scheduled.filter(t=>dayState.done[t.id]).length;
+
+  let html = headerBlock('STAR MAP');
+  html += '<div class="path">';
+  BASES.forEach((w,i)=>{
+    const unlocked = streak >= w.threshold;
+    const isCurrent = current.threshold === w.threshold;
+    const isExpanded = unlocked && i===expandedIndex;
+    html += '<div class="node-row'+(unlocked?' clickable':'')+'"'+(unlocked?' data-node="'+i+'"':'')+'><div class="connector"></div>';
+    html += '<div class="node'+(unlocked?' unlocked':'')+'">'+(unlocked? w.icon : '🔒')+'</div>';
+    html += '<div class="node-info"><div class="node-name'+(unlocked?' unlocked':'')+'">'+w.name+'</div>';
+    html += '<div class="node-sub">'+(unlocked ? w.note + (isCurrent? ' \u2014 you are here':'') : 'Reach a '+w.threshold+'-day streak')+'</div></div>';
+    html += '<div class="node-day">Day '+w.threshold+'</div></div>';
+    if(isExpanded){
+      html += '<div class="zone-detail" style="background:'+w.bg+';">';
+      html += '<div class="zone-power">\u26a1 '+doneCount+'/'+scheduled.length+' tasks completed today \u2014 fueling the next jump</div>';
+      const facts = factsFor(w);
+      const revealed = revealedFacts[w.name] || [];
+      html += '<div class="fact-list">';
+      facts.forEach((f,fi)=>{
+        const isRevealed = revealed.includes(fi);
+        html += '<div class="fact-row'+(isRevealed?'':' locked')+'">'+(isRevealed ? '🔭 '+f : '??? tap scan to reveal')+'</div>';
+      });
+      html += '</div>';
+      const allRevealed = revealed.length >= facts.length;
+      html += '<button class="scan-btn" id="scanBtn" data-basename="'+w.name.replace(/"/g,'&quot;')+'"'+(allRevealed?' disabled':'')+'>'+(allRevealed?'Fully Scanned':'🔍 Scan This World')+'</button>';
+      html += '</div>';
+    }
+  });
+  html += '</div>';
+  if(next){
+    const span = next.threshold - prevThreshold;
+    const pct = Math.min(100, Math.round(((streak - prevThreshold)/span)*100));
+    html += '<div style="text-align:center; font-size:12px; color:var(--ink-dim); margin-top:4px;">NEXT BASE: '+next.name+' \u2014 '+(next.threshold-streak)+' DAY'+((next.threshold-streak)===1?'':'S')+' AWAY</div>';
+    html += '<div class="progress-track"><div class="progress-fill" style="width:'+pct+'%;"></div></div>';
+  } else {
+    html += '<div style="text-align:center; font-size:12px; color:var(--gold); margin-top:4px;">All 365 days charted \u2014 legend status.</div>';
+  }
+  return html;
+}
+
+function objCard(o, isDone, completedDate){
+  const total = o.subtasks.length;
+  const done = o.subtasks.filter(s=>s.done).length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  const celebrating = justCompletedObjId === o.id;
+  let html = '<div class="obj-card'+(isDone?' obj-complete':'')+(celebrating?' celebrating':'')+'" style="background:'+o.gradient+';" data-obj="'+escapeHtml(o.id)+'">';
+  if(celebrating){
+    const r = rewardForIndex(o.rewardIndex != null ? o.rewardIndex : 0);
+    html += '<div class="obj-burst">🎉 UNLOCKED: '+r.icon+' '+escapeHtml(r.name.toUpperCase())+'</div>';
+  }
+  html += '<button type="button" class="obj-del icon-btn" data-delobj="'+escapeHtml(o.id)+'" aria-label="Delete objective">×</button>';
+  html += '<div class="obj-top"><div class="obj-title">'+(isDone?'✓ ':'')+escapeHtml(o.label)+'</div><div class="obj-icon">'+o.icon+'</div></div>';
+  if(completedDate) html += '<div class="obj-date">Completed '+escapeHtml(completedDate)+'</div>';
+  if(total > 0){
+    html += '<div class="obj-progress-track"><div class="obj-progress-fill" style="width:'+pct+'%;"></div></div>';
+    html += '<div class="obj-footer"><span>'+pct+'% complete</span><span>'+done+'/'+total+' steps</span></div>';
+  } else {
+    html += '<div class="obj-footer" style="justify-content:flex-start;"><span>Add a step below to get started</span></div>';
+  }
+  html += '<div class="sub-list">';
+  o.subtasks.forEach(s=>{
+    html += '<div class="sub-row" data-sub="'+escapeHtml(s.id)+'" data-subobj="'+escapeHtml(o.id)+'" role="button" tabindex="0">';
+    html += '<div class="sub-check'+(s.done?' done':'')+'">'+(s.done?'✓':'')+'</div>';
+    html += '<div class="sub-label'+(s.done?' done':'')+'">'+escapeHtml(s.label)+'</div>';
+    html += '<button type="button" class="sub-del icon-btn" data-delsub="'+escapeHtml(s.id)+'" data-delsubobj="'+escapeHtml(o.id)+'" aria-label="Delete step">×</button></div>';
+  });
+  html += '</div>';
+  if(!isDone) html += '<div class="sub-add-row"><input type="text" class="sub-add-input" data-addto="'+escapeHtml(o.id)+'" placeholder="+ Add a step\u2026" /></div>';
+  html += '</div>';
+  return html;
+}
+function objectivesPage(){
+  const streak = window.__streak || 0;
+  const active = objectives.filter(o=>!o.completedAt || o.id===justCompletedObjId);
+  const completed = objectives.filter(o=>o.completedAt && o.id!==justCompletedObjId)
+    .sort((a,b)=> new Date(b.completedAt) - new Date(a.completedAt));
+  let html = headerBlock('OBJECTIVES',
+    '<div class="badge" id="goHangar" role="button" tabindex="0" title="View hangar" aria-label="Hangar">🛠'+(completed.length?'<span class="badge-count">'+completed.length+'</span>':'')+'</div>');
+  html += '<div class="hint" style="text-align:center; margin-bottom:14px;">Long-range goals \u2014 break them into steps, check them off as you go.</div>';
+  if(active.length===0){
+    html += '<div class="card"><div class="empty">'+(completed.length
+      ? 'All objectives complete \u2014 open Completed below or tap 🛠 for gear in the Hangar.'
+      : 'No objectives yet. Chart a long-range goal below \u2014 you can break it into steps once it exists.')+'</div></div>';
+  }
+  active.forEach(o=>{ html += objCard(o, !!o.completedAt); });
+  html += '<button type="button" class="add-btn" id="openAddObj" style="border-color:rgba(255,255,255,0.3); color:var(--ink);">+ Add Objective</button>';
+  if(completed.length){
+    html += '<button type="button" class="archive-toggle" id="toggleObjArchive" aria-expanded="'+(showObjArchive?'true':'false')+'">'+
+      (showObjArchive ? '▼' : '▶')+' Completed objectives ('+completed.length+')</button>';
+    if(showObjArchive){
+      html += '<div class="archive-section">';
+      completed.forEach(o=>{
+        const d = new Date(o.completedAt);
+        const ds = MONTHS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
+        html += objCard(o, true, ds);
+      });
+      html += '<div class="hint" style="text-align:center;">Gear from these lives in the Hangar.</div></div>';
+    }
+  }
+  return html;
+}
+function fmtDay(d){
+  const diff = Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate()) - new Date(today.getFullYear(),today.getMonth(),today.getDate()))/86400000);
+  if(diff===1) return 'Tomorrow';
+  if(diff===-1) return 'Yesterday';
+  const rel = diff<0 ? Math.abs(diff)+' days ago' : 'in '+diff+' days';
+  return DAY_NAMES[d.getDay()]+', '+MONTHS[d.getMonth()]+' '+d.getDate()+' \u00b7 '+rel;
+}
+function upcomingPage(){
+  const streak = window.__streak || 0;
+  const list = upcoming();
+  let html = headerBlock('FUTURE MISSIONS');
+  html += '<div class="hint" style="text-align:center; margin-bottom:14px;">Scheduled for a later date. Each one moves to Mission Control on its day.</div>';
+  if(list.length===0){
+    html += '<div class="card"><div class="empty">Nothing scheduled ahead. Add a task with a one-off date to queue it up here.</div></div>';
+    return html;
+  }
+  const groups = {};
+  list.forEach(t=>{ (groups[t.recurrence.date] = groups[t.recurrence.date] || []).push(t); });
+  Object.keys(groups).sort().forEach(dk=>{
+    const [y,m,d] = dk.split('-').map(Number);
+    const dt = new Date(y, m-1, d);
+    html += '<div class="sec-label">'+fmtDay(dt).toUpperCase()+'</div>';
+    html += '<div class="card">';
+    groups[dk].forEach((t,i)=>{
+      html += '<div class="task'+(i===groups[dk].length-1?' last':'')+'">';
+      html += '<div class="future-dot">📡</div>';
+      html += '<div class="task-body"><div class="task-label">'+escapeHtml(t.label)+'</div>';
+      html += '<div class="task-sub">'+(t.tag ? '<span class="tag-chip">'+escapeHtml(t.tag)+'</span>' : '')+'</div></div>';
+      html += '<button type="button" class="del icon-btn" data-del="'+escapeHtml(t.id)+'" aria-label="Delete task">×</button></div>';
+    });
+    html += '</div>';
+  });
+  return html;
+}
+function previousPage(){
+  const streak = window.__streak || 0;
+  const groups = backlog();
+  const total = groups.reduce((n,g)=>n+g.tasks.length, 0);
+  let html = headerBlock('PREVIOUS MISSIONS');
+  if(total===0){
+    html += '<div class="card"><div class="empty">Nothing outstanding. All caught up — clear skies behind you.</div></div>';
+    return html;
+  }
+  html += '<div class="hint" style="text-align:center; margin-bottom:10px;">'+total+' task'+(total===1?'':'s')+' outstanding. Tap to check one off \u2014 that credits the original day and can restore a broken streak. Tap \u00d7 to let it go.</div>';
+  html += '<button type="button" class="add-btn" id="clearBacklog" style="border-color:rgba(255,107,94,0.4); color:var(--alert); margin-bottom:6px;">Dismiss all '+total+'</button>';
+  groups.forEach(g=>{
+    html += '<div class="sec-label">'+fmtDay(g.date).toUpperCase()+'</div>';
+    html += '<div class="card">';
+    g.tasks.forEach((t,i)=>{
+      html += '<div class="task'+(i===g.tasks.length-1?' last':'')+'" data-pasttask="'+escapeHtml(t.id)+'" data-pastday="'+escapeHtml(g.dk)+'" role="button" tabindex="0">';
+      html += '<div class="check"></div>';
+      html += '<div class="task-body"><div class="task-label">'+escapeHtml(t.label)+'</div>';
+      html += '<div class="task-sub">'+(t.tag ? '<span class="tag-chip">'+escapeHtml(t.tag)+'</span>' : '')+'</div></div>';
+      html += '<button type="button" class="del icon-btn" data-skiptask="'+escapeHtml(t.id)+'" data-skipday="'+escapeHtml(g.dk)+'" title="Dismiss" aria-label="Dismiss">×</button></div>';
+    });
+    html += '</div>';
+  });
+  return html;
+}
+function hangarPage(){
+  const streak = window.__streak || 0;
+  const unlocked = unlockedRewards();
+  const ship = currentShip();
+  const suit = currentSuit();
+  const nextReward = rewardForIndex(unlocked.length);
+  let html = headerBlock('HANGAR');
+
+  if(unlocked.length===0){
+    html += '<div class="card"><div class="empty">Your hangar is empty. Finish every step of an objective to earn your first piece of equipment.</div></div>';
+    html += '<div class="sec-label" style="margin-top:20px;">FIRST UNLOCK</div>';
+    html += '<div class="card gear-next"><div class="gear-icon locked">🔒</div><div class="gear-body"><div class="gear-name">'+nextReward.name+'</div>'+
+      '<div class="gear-desc">'+nextReward.desc+'</div></div></div>';
+    return html;
+  }
+
+  // Currently equipped loadout
+  html += '<div class="sec-label">ACTIVE LOADOUT</div>';
+  html += '<div class="loadout-row">';
+  html += '<div class="card loadout-card"><div class="loadout-kind">STARSHIP</div>'+
+    (ship ? '<div class="loadout-icon" style="color:'+ship.accent+'">'+ship.icon+'</div><div class="loadout-name">'+ship.name+'</div>'
+          : '<div class="loadout-icon locked">🔒</div><div class="loadout-name dim">None yet</div>')+'</div>';
+  html += '<div class="card loadout-card"><div class="loadout-kind">SUIT</div>'+
+    (suit ? '<div class="loadout-icon" style="color:'+suit.accent+'">'+suit.icon+'</div><div class="loadout-name">'+suit.name+'</div>'
+          : '<div class="loadout-icon locked">🔒</div><div class="loadout-name dim">None yet</div>')+'</div>';
+  html += '</div>';
+
+  // Full collection, newest first
+  html += '<div class="sec-label" style="margin-top:22px;">EQUIPMENT EARNED \u2014 '+unlocked.length+'</div>';
+  html += '<div class="card" style="padding:4px 14px;">';
+  unlocked.slice().reverse().forEach(r=>{
+    const d = new Date(r.at);
+    html += '<div class="gear-row">';
+    html += '<div class="gear-icon" style="color:'+r.accent+'">'+r.icon+'</div>';
+    html += '<div class="gear-body"><div class="gear-name">'+r.name+' <span class="gear-kind">'+(r.type==='ship'?'STARSHIP':'SUIT')+'</span></div>';
+    html += '<div class="gear-desc">'+r.desc+'</div>';
+    html += '<div class="gear-from">Earned from “'+escapeHtml(r.objective)+'” \u00b7 '+MONTHS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()+'</div></div></div>';
+  });
+  html += '</div>';
+
+  // Next unlock teaser
+  html += '<div class="sec-label" style="margin-top:22px;">NEXT UNLOCK</div>';
+  html += '<div class="card gear-next"><div class="gear-icon locked">🔒</div><div class="gear-body">'+
+    '<div class="gear-name">'+nextReward.name+' <span class="gear-kind">'+(nextReward.type==='ship'?'STARSHIP':'SUIT')+'</span></div>'+
+    '<div class="gear-desc">'+nextReward.desc+'</div>'+
+    '<div class="gear-from">Complete one more objective to unlock.</div></div></div>';
+  return html;
+}
+
+async function revealFact(baseName){
+  const facts = ZONE_FACTS[baseName] || [];
+  const revealed = revealedFacts[baseName] || [];
+  if(revealed.length >= facts.length) return;
+  revealedFacts = {...revealedFacts, [baseName]: [...revealed, revealed.length]};
+  await setJSON('zonefacts', revealedFacts);
+  render();
+}
+
+async function render(){
+  window.__streak = computeStreak();
+  const app = document.getElementById('app');
+  if(activeTab==='today'){
+    app.innerHTML = todayPage();
+    document.body.style.background = currentBaseFor(window.__streak).bg;
+    updateCountdown();
+  }
+  else if(activeTab==='starmap'){
+    app.innerHTML = starmapPage();
+    const exp = (expandedIndex!==null) ? BASES[expandedIndex] : null;
+    document.body.style.background = exp ? exp.bg : DEFAULT_BG;
+  }
+  else if(activeTab==='upcoming'){ app.innerHTML = upcomingPage(); document.body.style.background = DEFAULT_BG; }
+  else if(activeTab==='previous'){ app.innerHTML = previousPage(); document.body.style.background = DEFAULT_BG; }
+  else if(activeTab==='hangar'){ app.innerHTML = hangarPage(); document.body.style.background = DEFAULT_BG; }
+  else { app.innerHTML = objectivesPage(); document.body.style.background = DEFAULT_BG; }
+  const dAv = document.getElementById('drawerAvatar'); if(dAv) dAv.textContent = avatarIcon();
+  document.querySelectorAll('.drawer-item').forEach(b=>b.classList.toggle('active', b.getAttribute('data-tab')===activeTab));
+  attachHandlers();
+}
+function attachHandlers(){
+  document.querySelectorAll('[data-task]').forEach(el=>{
+    el.addEventListener('click', (e)=>{ if(e.target.closest('[data-del], [data-edit]')) return; toggleTask(tasks.find(t=>t.id===el.getAttribute('data-task'))); });
+  });
+  document.querySelectorAll('[data-del]').forEach(el=>{ el.addEventListener('click', (e)=>{ e.stopPropagation(); deleteTask(el.getAttribute('data-del')); }); });
+  document.querySelectorAll('[data-sub]').forEach(el=>{
+    el.addEventListener('click', (e)=>{ if(e.target.closest('[data-delsub]')) return; toggleSubtask(el.getAttribute('data-subobj'), el.getAttribute('data-sub')); });
+  });
+  document.querySelectorAll('[data-delsub]').forEach(el=>{
+    el.addEventListener('click', (e)=>{ e.stopPropagation(); deleteSubtask(el.getAttribute('data-delsubobj'), el.getAttribute('data-delsub')); });
+  });
+  document.querySelectorAll('.sub-add-input').forEach(el=>{
+    el.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter'){ addSubtaskToObjective(el.getAttribute('data-addto'), el.value); }
+    });
+    el.addEventListener('blur', ()=>{ if(el.value.trim()) addSubtaskToObjective(el.getAttribute('data-addto'), el.value); });
+  });
+  document.querySelectorAll('[data-delobj]').forEach(el=>{ el.addEventListener('click', (e)=>{ e.stopPropagation(); deleteObjective(el.getAttribute('data-delobj')); }); });
+  const openAdd = document.getElementById('openAddTask'); if(openAdd) openAdd.addEventListener('click', ()=>openTaskModal());
+  const openAddObj = document.getElementById('openAddObj'); if(openAddObj) openAddObj.addEventListener('click', ()=>openObjModal());
+  const archBtn = document.getElementById('toggleObjArchive');
+  if(archBtn) archBtn.addEventListener('click', ()=>{ showObjArchive = !showObjArchive; render(); });
+  const goPrev = document.getElementById('goPrevious'); if(goPrev) goPrev.addEventListener('click', ()=>setTab('previous'));
+  const goUp = document.getElementById('goUpcoming'); if(goUp) goUp.addEventListener('click', ()=>setTab('upcoming'));
+  const goHangar = document.getElementById('goHangar'); if(goHangar) goHangar.addEventListener('click', ()=>setTab('hangar'));
+  const profileBtn = document.getElementById('profileBtn'); if(profileBtn) profileBtn.addEventListener('click', openDrawer);
+  document.querySelectorAll('[data-node]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const idx = parseInt(el.getAttribute('data-node'),10);
+      expandedIndex = (expandedIndex===idx) ? null : idx;
+      render();
+    });
+  });
+  document.querySelectorAll('[data-edit]').forEach(el=>{
+    el.addEventListener('click', (ev)=>{
+      ev.stopPropagation();
+      const t = tasks.find(x=>x.id===el.getAttribute('data-edit'));
+      if(t) openTaskModal(t);
+    });
+  });
+  document.querySelectorAll('[data-skiptask]').forEach(el=>{
+    el.addEventListener('click', async (ev)=>{
+      ev.stopPropagation();   // don't also complete the task
+      const id = el.getAttribute('data-skiptask');
+      const dk = el.getAttribute('data-skipday');
+      const d = ensureDay(dk);
+      d.skipped = d.skipped || {};
+      d.skipped[id] = true;
+      await setJSON('days', allDays);
+      render();
+    });
+  });
+  const clearBl = document.getElementById('clearBacklog');
+  if(clearBl) clearBl.addEventListener('click', async ()=>{
+    if(!confirm('Dismiss every outstanding task? They stay in your history as missed, but stop showing here.')) return;
+    backlog().forEach(g=>{
+      const d = ensureDay(g.dk);
+      d.skipped = d.skipped || {};
+      g.tasks.forEach(t=>{ d.skipped[t.id] = true; });
+    });
+    await setJSON('days', allDays);
+    render();
+  });
+  document.querySelectorAll('[data-pasttask]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      const id = el.getAttribute('data-pasttask');
+      const dk = el.getAttribute('data-pastday');
+      const task = tasks.find(t=>t.id===id);
+      if(!task) return;
+      const d = ensureDay(dk);
+      d.done[id] = true;
+      await setJSON('days', allDays);
+      render();
+    });
+  });
+  const scanBtn = document.getElementById('scanBtn'); if(scanBtn) scanBtn.addEventListener('click', ()=>{ revealFact(scanBtn.getAttribute('data-basename')); });
+  const focusInput = document.getElementById('focusInput'); if(focusInput) focusInput.addEventListener('change', ()=>setFocusText(focusInput.value));
+}
+function setTab(tab){
+  activeTab = tab;
+  document.querySelectorAll('.drawer-item').forEach(b=>b.classList.toggle('active', b.getAttribute('data-tab')===tab));
+  render();
+}
+
+// ---- Add Task modal ----
+let selectedRecType='daily', selectedDays=[];
+let editingTaskId = null;
+function openTaskModal(existing){
+  // Guard: click handlers may pass a MouseEvent — only real tasks have an id string.
+  if(existing && (typeof existing !== 'object' || !existing.id || existing instanceof Event)) existing = null;
+  editingTaskId = existing ? existing.id : null;
+  selectedRecType='daily'; selectedDays=[];
+  document.getElementById('taskLabel').value=''; document.getElementById('taskTag').value='';
+  document.getElementById('intervalDays').value='2'; document.getElementById('weeklyTarget').value='2';
+  document.getElementById('onceDate').value = dateKey(today);
+  const errEl = document.getElementById('taskFormError'); errEl.style.display='none'; errEl.textContent='';
+  renderTagSelect(); renderRecChips(); renderCustomDays(); updateConditionalRows();
+  if(existing){
+    const r = existing.recurrence || {type:'daily'};
+    document.getElementById('taskLabel').value = existing.label;
+    selectedRecType = r.type;
+    selectedDays = r.days || [];
+    if(r.intervalDays) document.getElementById('intervalDays').value = r.intervalDays;
+    if(r.weeklyTarget) document.getElementById('weeklyTarget').value = r.weeklyTarget;
+    if(r.date) document.getElementById('onceDate').value = r.date;
+    const sel = document.getElementById('tagSelect');
+    if(existing.tag && !savedTags.includes(existing.tag)){
+      const o=document.createElement('option'); o.value=existing.tag; o.textContent=existing.tag;
+      sel.insertBefore(o, sel.lastChild);
+    }
+    sel.value = existing.tag || '';
+    renderRecChips(); renderCustomDays(); updateConditionalRows(); updateNewTagRow();
+  }
+  document.querySelector('#taskOverlay h2').textContent = existing ? 'Edit task' : 'New task';
+  document.getElementById('saveTaskBtn').textContent = existing ? 'Save changes' : 'Save task';
+  document.getElementById('taskOverlay').classList.add('open');
+}
+function closeTaskModal(){ document.getElementById('taskOverlay').classList.remove('open'); }
+function renderTagSelect(){
+  const sel = document.getElementById('tagSelect'); sel.innerHTML='';
+  const mk = (val, text)=>{ const o=document.createElement('option'); o.value=val; o.textContent=text; sel.appendChild(o); };
+  mk('', 'No tag');
+  savedTags.forEach(tag=> mk(tag, tag));
+  mk('__new__', '+ New tag…');
+  sel.value = '';
+  updateNewTagRow();
+}
+function updateNewTagRow(){
+  const isNew = document.getElementById('tagSelect').value === '__new__';
+  document.getElementById('newTagRow').style.display = isNew ? 'flex' : 'none';
+  if(isNew) document.getElementById('taskTag').focus();
+}
+function renderRecChips(){
+  const wrap=document.getElementById('recChips'); wrap.innerHTML='';
+  RECURRENCE_OPTIONS.forEach(o=>{
+    const b=document.createElement('button'); b.className='chip'+(selectedRecType===o.type?' selected':''); b.textContent=o.label;
+    b.addEventListener('click', ()=>{ selectedRecType=o.type; renderRecChips(); updateConditionalRows(); }); wrap.appendChild(b);
+  });
+}
+function renderCustomDays(){
+  const wrap=document.getElementById('customDaysRow'); wrap.innerHTML='';
+  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach((d,i)=>{
+    const b=document.createElement('button'); b.className='chip'+(selectedDays.includes(i)?' selected':''); b.textContent=d;
+    b.addEventListener('click', ()=>{ selectedDays = selectedDays.includes(i) ? selectedDays.filter(x=>x!==i) : [...selectedDays,i]; renderCustomDays(); });
+    wrap.appendChild(b);
+  });
+}
+function updateConditionalRows(){
+  document.getElementById('onceDateRow').style.display = selectedRecType==='once' ? 'flex' : 'none';
+  document.getElementById('customDaysRow').style.display = selectedRecType==='custom_days' ? 'flex' : 'none';
+  document.getElementById('intervalRow').style.display = selectedRecType==='interval' ? 'flex' : 'none';
+  document.getElementById('weeklyRow').style.display = selectedRecType==='weekly_count' ? 'flex' : 'none';
+}
+document.getElementById('tagSelect').addEventListener('change', updateNewTagRow);
+document.getElementById('cancelTaskBtn').addEventListener('click', closeTaskModal);
+document.getElementById('saveTaskBtn').addEventListener('click', async ()=>{
+  const errEl = document.getElementById('taskFormError');
+  const label = document.getElementById('taskLabel').value.trim();
+  const selVal = document.getElementById('tagSelect').value;
+  const typed = document.getElementById('taskTag').value.trim();
+  const tag = selVal === '__new__' ? (typed || null) : (selVal || null);
+  if(!label){ errEl.textContent = 'Give the task a name.'; errEl.style.display='block'; return; }
+  if(selVal === '__new__' && !typed){ errEl.textContent = 'Name your new tag, or pick "No tag".'; errEl.style.display='block'; return; }
+  if(selectedRecType==='custom_days' && selectedDays.length===0){
+    errEl.textContent = 'Pick at least one day for "Specific days," or choose a different repeat type.';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  let recurrence;
+  if(selectedRecType==='once'){
+    const chosen = document.getElementById('onceDate').value || dateKey(today);
+    const orig = editingTaskId ? (tasks.find(t=>t.id===editingTaskId)||{}).recurrence : null;
+    if(chosen < dateKey(today) && !(orig && orig.date===chosen)){
+      errEl.textContent = 'Pick today or a future date.'; errEl.style.display='block'; return;
+    }
+    recurrence={type:'once', date:chosen};
+  }
+  else if(selectedRecType==='custom_days') recurrence={type:'custom_days', days:selectedDays};
+  else if(selectedRecType==='interval'){
+    const prev = editingTaskId ? (tasks.find(t=>t.id===editingTaskId)||{}).recurrence : null;
+    const keepAnchor = prev && prev.type==='interval' && prev.anchor ? prev.anchor : new Date().toISOString();
+    recurrence={type:'interval', intervalDays:parseInt(document.getElementById('intervalDays').value,10)||1, anchor:keepAnchor};
+  }
+  else if(selectedRecType==='weekly_count') recurrence={type:'weekly_count', weeklyTarget:parseInt(document.getElementById('weeklyTarget').value,10)||1};
+  else recurrence={type:selectedRecType};
+  if(tag && !savedTags.includes(tag)){ savedTags = [...savedTags, tag].sort(); await setJSON('savedTags', savedTags); }
+  if(editingTaskId){
+    // keep the id so completion history and streak survive the edit
+    tasks = tasks.map(t => t.id===editingTaskId ? {...t, label, tag, recurrence} : t);
+  } else {
+    tasks.push({id:uid('t'), label, tag, recurrence, createdAt:new Date().toISOString()});
+  }
+  await setJSON('tasks', tasks); closeTaskModal(); render();
+});
+
+// ---- Add Objective modal ----
+let draftSteps = [];
+function openObjModal(){
+  draftSteps = [];
+  document.getElementById('objLabel').value=''; document.getElementById('objStepInput').value='';
+  renderDraftSteps();
+  document.getElementById('objOverlay').classList.add('open');
+}
+function closeObjModal(){ document.getElementById('objOverlay').classList.remove('open'); }
+function renderDraftSteps(){
+  const wrap = document.getElementById('objStepsList'); wrap.innerHTML='';
+  draftSteps.forEach((s,i)=>{
+    const row = document.createElement('div');
+    row.className = 'inline-row';
+    row.style.justifyContent = 'space-between';
+    const lab = document.createElement('span'); lab.style.fontSize='13.5px'; lab.textContent='\u2022 '+s;
+    row.appendChild(lab);
+    const del = document.createElement('button'); del.type='button'; del.className='icon-btn';
+    del.textContent = '×'; del.style.color = 'var(--pink)'; del.style.cursor='pointer'; del.style.padding='0 6px';
+    del.setAttribute('aria-label','Remove step');
+    del.addEventListener('click', ()=>{ draftSteps.splice(i,1); renderDraftSteps(); });
+    row.appendChild(del);
+    wrap.appendChild(row);
+  });
+}
+document.getElementById('addObjStepBtn').addEventListener('click', ()=>{
+  const input = document.getElementById('objStepInput');
+  if(input.value.trim()){ draftSteps.push(input.value.trim()); input.value=''; renderDraftSteps(); }
+});
+document.getElementById('cancelObjBtn').addEventListener('click', closeObjModal);
+document.getElementById('saveObjBtn').addEventListener('click', async ()=>{
+  const label = document.getElementById('objLabel').value.trim(); if(!label) return;
+  const stepInput = document.getElementById('objStepInput');
+  if(stepInput.value.trim()){ draftSteps.push(stepInput.value.trim()); }
+  const gradient = OBJ_GRADIENTS[objectives.length % OBJ_GRADIENTS.length];
+  const subtasks = draftSteps.map(s => ({id:uid('sub'), label:s, done:false}));
+  objectives.push({id:uid('obj'), label, icon:OBJ_ICONS[objectives.length % OBJ_ICONS.length], gradient, subtasks});
+  await setJSON('objectives', objectives); closeObjModal(); render();
+});
+
+// ---- Left drawer (all navigation + profile) ----
+// Guarded: if matchMedia is unavailable, fall back to width, then to mobile.
+// An unguarded call here would break the whole app at boot.
+const isDesktop = () => {
+  try{
+    if(window.matchMedia) return window.matchMedia('(min-width: 760px)').matches;
+    return (window.innerWidth || 1024) >= 760;
+  }catch(e){ return true; }
+};
+function updateStorageNote(){
+  const el = document.getElementById('storageNote');
+  if(!el) return;
+  const persistent = backend === 'local' || backend === 'host';
+  el.className = 'storage-note' + (persistent ? '' : ' warn');
+  el.innerHTML = persistent
+    ? '<b>' + storageLabel() + '</b> \u2014 your progress stays on this device.'
+    : '<b>' + storageLabel() + '</b> \u2014 this viewer blocks saving. Open the file in your browser to keep progress.';
+}
+function openDrawer(){ updateStorageNote();
+  document.getElementById('profileName').value = profileName || '';
+  if(isDesktop()) return;
+  document.getElementById('drawerOverlay').classList.add('open');
+}
+function closeDrawer(){
+  if(isDesktop()) return;
+  document.getElementById('drawerOverlay').classList.remove('open');
+}
+function syncLayout(){
+  // The sidebar is permanent on desktop; the class drives the mobile slide-in.
+  const ov = document.getElementById('drawerOverlay');
+  if(isDesktop()) ov.classList.add('open'); else ov.classList.remove('open');
+}
+window.addEventListener('resize', syncLayout);
+document.querySelectorAll('.drawer-item').forEach(btn=>{
+  btn.addEventListener('click', ()=>{ setTab(btn.getAttribute('data-tab')); closeDrawer(); });
+});
+document.getElementById('drawerOverlay').addEventListener('click', (e)=>{
+  if(!e.target.closest('.drawer')) closeDrawer();
+});
+document.getElementById('saveProfileBtn').addEventListener('click', async ()=>{
+  profileName = document.getElementById('profileName').value.trim();
+  const ok = await setJSON('profileName', profileName);
+  updateStorageNote();
+  if(!ok && backend === 'memory'){
+    /* still show in-session */ 
+  }
+  closeDrawer();
+  render();
+});
+
+
+/* ---------- Onboarding ---------- */
+const ONB_SLIDES = [
+  {icon:'🚀', title:'Your streak is distance',
+   body:'Finish your tasks for the day and your streak grows. Three days puts you in orbit. A week reaches the Moon. Two weeks, Mars.'},
+  {icon:'⭐', title:'Eighteen destinations',
+   body:'Every milestone unlocks a new world on the Star Map \u2014 each one scannable for real astronomy facts. The only way there is showing up.'},
+  {icon:'🛠', title:'Bigger goals earn gear',
+   body:'Break long-range objectives into steps. Finish one and you earn a starship or an EVA suit for your hangar.'},
+];
+let onbIndex = 0;
+function renderOnb(){
+  const sl = ONB_SLIDES[onbIndex];
+  document.getElementById('onbIcon').textContent = sl.icon;
+  document.getElementById('onbTitle').textContent = sl.title;
+  document.getElementById('onbBody').textContent = sl.body;
+  document.getElementById('onbDots').innerHTML = ONB_SLIDES.map((_,i)=>'<i class="'+(i===onbIndex?'on':'')+'"></i>').join('');
+  const last = onbIndex === ONB_SLIDES.length-1;
+  document.getElementById('onbNav').style.display = last ? 'none' : 'block';
+  document.getElementById('onbChoices').style.display = last ? 'block' : 'none';
+}
+function showOnboarding(){ document.getElementById('onboarding').style.display='block'; onbIndex=0; renderOnb(); }
+async function finishOnboarding(seed){
+  if(seed){
+    tasks = SEED_TASKS.map(t=>({...t, id:uid('t')}));
+    savedTags = Array.from(new Set(tasks.map(t=>t.tag).filter(Boolean))).sort();
+  } else { tasks = []; savedTags = []; }
+  await setJSON('tasks', tasks);
+  await setJSON('savedTags', savedTags);
+  await setJSON('seeded', true);
+  await setJSON('onboarded', true);
+  document.getElementById('onboarding').style.display='none';
+  await loadAll(); await render();
+}
+document.getElementById('onbNext').addEventListener('click', ()=>{ onbIndex++; renderOnb(); });
+document.getElementById('onbSkip').addEventListener('click', ()=>{ onbIndex = ONB_SLIDES.length-1; renderOnb(); });
+document.getElementById('onbSeed').addEventListener('click', ()=> finishOnboarding(true));
+document.getElementById('onbEmpty').addEventListener('click', ()=> finishOnboarding(false));
+
+/* ---------- Undo ---------- */
+let undoPayload = null, undoTimer = null;
+function showUndo(message, task, index){
+  undoPayload = {task, index};
+  objUndoPayload = null;
+  document.getElementById('undoText').textContent = message;
+  document.getElementById('undoBar').style.display = 'flex';
+  clearTimeout(undoTimer);
+  undoTimer = setTimeout(hideUndo, 5000);
+}
+function hideUndo(){ document.getElementById('undoBar').style.display='none'; undoPayload=null; objUndoPayload=null; }
+document.getElementById('undoBtn').addEventListener('click', async ()=>{
+  if(objUndoPayload){
+    objectives.splice(Math.min(objUndoPayload.index, objectives.length), 0, objUndoPayload.obj);
+    await setJSON('objectives', objectives);
+    objUndoPayload = null; hideUndo(); render(); return;
+  }
+  if(!undoPayload) return;
+  tasks.splice(Math.min(undoPayload.index, tasks.length), 0, undoPayload.task);
+  await setJSON('tasks', tasks);
+  hideUndo(); render();
+});
+
+
+/* ---------- Crash guard ---------- */
+window.addEventListener('error', (e)=>{
+  let bar = document.getElementById('crashBar');
+  if(!bar){ bar=document.createElement('div'); bar.id='crashBar'; bar.className='crash-bar'; document.body.appendChild(bar); }
+  bar.textContent = '\u26A0\uFE0F Something went wrong: ' + (e.message||'unknown error');
+  bar.style.display='block';
+});
+
+
+/* ---------- Export / import backup ---------- */
+const BACKUP_KEYS = ['tasks','objectives','days','savedTags','profileName','onboarded','seeded','zonefacts'];
+async function exportBackup(){
+  await probeStorage();
+  const data = { version:1, exportedAt:new Date().toISOString(), keys:{} };
+  for(const k of BACKUP_KEYS){
+    data.keys[k] = await getJSON(k, null);
+  }
+  // Also dump week:* keys from localStorage when available
+  data.weekKeys = {};
+  if(backend === 'local'){
+    for(let i=0;i<window.localStorage.length;i++){
+      const full = window.localStorage.key(i);
+      if(full && full.startsWith(KEY_PREFIX+'week:')){
+        const short = full.slice(KEY_PREFIX.length);
+        try{ data.weekKeys[short] = JSON.parse(window.localStorage.getItem(full)); }catch(e){}
+      }
+    }
+  } else {
+    // memory/host: include current week at least
+    const wk = 'week:'+weekKey(today);
+    data.weekKeys[wk] = await getJSON(wk, {});
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cosmoplan-backup-'+dateKey(new Date())+'.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+async function importBackupFile(file){
+  let parsed;
+  try{ parsed = JSON.parse(await file.text()); }catch(e){ alert('That file is not valid JSON.'); return; }
+  if(!parsed || typeof parsed !== 'object' || !parsed.keys){ alert('Not a CosmoPlan backup (missing keys).'); return; }
+  if(!confirm('Import this backup? It will replace tasks, objectives, days, and settings on this device.')) return;
+  for(const k of BACKUP_KEYS){
+    if(k in parsed.keys) await setJSON(k, parsed.keys[k]);
+  }
+  if(parsed.weekKeys && typeof parsed.weekKeys === 'object'){
+    for(const [k,v] of Object.entries(parsed.weekKeys)) await setJSON(k, v);
+  }
+  await loadAll();
+  document.getElementById('profileName').value = profileName || '';
+  updateStorageNote();
+  await render();
+  alert('Backup imported.');
+}
+document.getElementById('exportDataBtn').addEventListener('click', ()=>exportBackup());
+document.getElementById('importDataBtn').addEventListener('click', ()=>document.getElementById('importFileInput').click());
+document.getElementById('importFileInput').addEventListener('change', async (e)=>{
+  const f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if(f) await importBackupFile(f);
+});
+
+/* ---------- A11y: Escape closes overlays; Enter on role=button ---------- */
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape'){
+    closeTaskModal(); closeObjModal(); closeDrawer();
+    return;
+  }
+  if(e.key === 'Enter' || e.key === ' '){
+    const t = e.target;
+    if(t && t.getAttribute && t.getAttribute('role')==='button'){
+      e.preventDefault();
+      t.click();
+    }
+  }
+});
+
+/* ---------- Day rollover ---------- */
+async function refreshTodayIfNeeded(){
+  if(!today) return;
+  const now = new Date();
+  if(dateKey(now) === dateKey(today)) return;
+  today = now;
+  dayState = ensureDay(dateKey(today));
+  weekData = await getJSON('week:'+weekKey(today), {});
+  await render();
+}
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) refreshTodayIfNeeded(); });
+window.addEventListener('focus', ()=>refreshTodayIfNeeded());
+
+(async function init(){
+  syncLayout();
+  const onboarded = await getJSON('onboarded', false);
+  if(!onboarded){ await loadAll(); showOnboarding(); updateStorageNote(); return; }
+  await ensureSeeded(); await loadAll();
+  document.getElementById('profileName').value = profileName || '';
+  updateStorageNote();
+  await render();
+})();
+
+</script>
+</body>
+</html>

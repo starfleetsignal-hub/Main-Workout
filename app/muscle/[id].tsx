@@ -1,7 +1,8 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { registerMuscleDetailView } from '../../src/ads/interstitial';
 import { BodyMap } from '../../src/components/BodyMap';
 import { ExerciseCard } from '../../src/components/ExerciseCard';
 import { StretchCard } from '../../src/components/StretchCard';
@@ -17,6 +18,12 @@ export default function MuscleDetailScreen() {
   const muscle = getMuscleById(id);
   const { isFavorite, toggleFavorite } = useFavorites();
   const [tab, setTab] = useState<TabKey>('strength');
+
+  useEffect(() => {
+    if (muscle) {
+      registerMuscleDetailView();
+    }
+  }, [muscle?.id]);
 
   if (!muscle) {
     return (

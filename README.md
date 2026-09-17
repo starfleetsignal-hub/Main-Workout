@@ -35,6 +35,7 @@ legal/App Store-rejection risk.
   navigation (tabs + a muscle detail stack screen)
 - TypeScript, strict mode
 - `@react-native-async-storage/async-storage` for local favorites persistence
+- `react-native-google-mobile-ads` for AdMob banner + interstitial ads
 - No backend, no accounts, no in-app purchases — it's a one-time-purchase
   reference app, so all content ships in the app bundle
 
@@ -71,6 +72,33 @@ assets/                  app icon, adaptive icon, splash, favicon (generated)
 To edit or extend the content (add a muscle, add an exercise variation,
 tweak wording), everything lives in `src/data/muscles.ts` — no other file
 needs to change for a content-only update.
+
+## Ads (AdMob)
+
+The app shows a banner ad on the Muscles/Search/Favorites tabs and an
+interstitial ad every few muscle detail views, via
+[`react-native-google-mobile-ads`](https://docs.page/invertase/react-native-google-mobile-ads).
+
+- Ads use a native SDK, so **they only work in a development or production
+  build — not in Expo Go.** Run `npx expo run:ios` / `npx expo run:android`,
+  or build a dev client with `eas build --profile development`, to test them.
+  They're intentionally a no-op on web.
+- Out of the box the app ships with Google's public **test** app/ad unit IDs,
+  so it builds and runs immediately and shows real (test) ad creatives
+  without an AdMob account. No revenue is earned from test ads.
+- To earn real revenue before release:
+  1. Create an AdMob account and register the app to get a real App ID, plus
+     a Banner and an Interstitial ad unit ID (separately for iOS/Android).
+  2. Replace the test `androidAppId` / `iosAppId` in the
+     `react-native-google-mobile-ads` plugin config in `app.json`.
+  3. Replace `PRODUCTION_BANNER_AD_UNIT_ID` / `PRODUCTION_INTERSTITIAL_AD_UNIT_ID`
+     in `src/ads/adUnits.ts` with your real ad unit IDs. (Dev builds always
+     use test ads regardless of these values, so you won't see your own ads
+     until you build in release mode.)
+  4. Rebuild — changing native app IDs requires a fresh native build, not
+     just a JS reload.
+- Ad frequency (how often the interstitial shows) is controlled by
+  `SHOW_EVERY_N_VIEWS` in `src/ads/interstitial.ts`.
 
 ## Building for the App Store / Play Store ($1.99 release)
 

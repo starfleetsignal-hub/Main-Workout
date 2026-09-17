@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
+import { initializeAds } from '../src/ads/init';
 import { FavoritesProvider } from '../src/context/FavoritesContext';
 import { RoutineProvider } from '../src/context/RoutineContext';
 import { colors } from '../src/theme/colors';
@@ -21,6 +22,10 @@ export default function RootLayout() {
       SplashScreen.hideAsync().catch(() => {});
     }
   }, [fontsLoaded]);
+
+  useEffect(() => {
+    initializeAds();
+  }, []);
 
   if (!fontsLoaded) {
     return null;

@@ -1,6 +1,7 @@
 import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AdBanner } from '../../src/components/AdBanner';
 import { MuscleCard } from '../../src/components/MuscleCard';
 import { useFavorites } from '../../src/context/FavoritesContext';
 import { getMuscleById } from '../../src/data/muscles';
@@ -29,6 +30,7 @@ export default function FavoritesScreen() {
           ) : null
         }
       />
+      <AdBanner />
     </SafeAreaView>
   );
 }

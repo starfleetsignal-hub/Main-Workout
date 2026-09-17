@@ -1,6 +1,7 @@
 import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AdBanner } from '../../src/components/AdBanner';
 import { MuscleCard } from '../../src/components/MuscleCard';
 import { MUSCLE_GROUPS, getMuscleById, getMusclesByGroup } from '../../src/data/muscles';
 import { colors, groupColors } from '../../src/theme/colors';
@@ -42,6 +43,7 @@ export default function HomeScreen() {
           return <MuscleCard muscle={muscle} />;
         }}
       />
+      <AdBanner />
     </SafeAreaView>
   );
 }

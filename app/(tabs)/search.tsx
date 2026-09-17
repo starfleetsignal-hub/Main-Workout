@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AdBanner } from '../../src/components/AdBanner';
 import { MuscleCard } from '../../src/components/MuscleCard';
 import { MUSCLES } from '../../src/data/muscles';
 import { colors } from '../../src/theme/colors';
@@ -41,6 +42,7 @@ export default function SearchScreen() {
           <Text style={styles.empty}>No muscles match "{query}". Try a different name.</Text>
         }
       />
+      <AdBanner />
     </SafeAreaView>
   );
 }

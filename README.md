@@ -4,6 +4,12 @@ A mobile reference app for strength training and stretching, covering every
 major muscle group in the body. Built with [Expo](https://expo.dev) /
 React Native so a single codebase ships to iOS, Android, and web.
 
+> This repo also contains a second, unrelated Expo app —
+> [`matchbox-collection-tracker/`](./matchbox-collection-tracker) (a
+> Matchbox die-cast collection tracker) — as its own self-contained project
+> with its own `package.json`. See that folder's README for details; it
+> doesn't affect anything below, which is all about MuscleGuide.
+
 ## What's in the app
 
 - **24 muscles** across Upper Body, Core, Lower Body, and Neck

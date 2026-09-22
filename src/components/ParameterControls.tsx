@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 import { radius, spacing } from '../theme/layout';
 
 /**
@@ -61,7 +62,7 @@ function StepButton({ label, onPress, disabled }: { label: string; onPress: () =
       accessibilityRole="button"
       accessibilityLabel={label === '+' ? 'Increase' : 'Decrease'}
       hitSlop={6}
-      style={[styles.stepButton, held && !disabled && { backgroundColor: colors.accentSoft }, disabled && { opacity: 0.3 }]}
+      style={[styles.stepButton, held && !disabled && { backgroundColor: colors.goldSoft }, disabled && { opacity: 0.3 }]}
     >
       <Text style={styles.stepButtonText}>{label}</Text>
     </Pressable>
@@ -88,8 +89,8 @@ export function SwitchSetting({
       <Switch
         value={value}
         onValueChange={onChange}
-        trackColor={{ false: colors.divider, true: colors.accentSoft }}
-        thumbColor={value ? colors.accent : colors.textFaint}
+        trackColor={{ false: colors.cardLine, true: colors.goldSoft }}
+        thumbColor={value ? colors.gold : colors.textFaint}
       />
     </View>
   );
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
   groupTitle: {
     color: colors.textFaint,
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: 1,
     textTransform: 'uppercase',
     marginBottom: spacing.sm,
@@ -121,7 +122,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.cardBorder,
+    borderColor: colors.cardLine,
     overflow: 'hidden',
   },
   row: {
@@ -131,7 +132,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
+    borderBottomColor: colors.cardLine,
     gap: spacing.md,
   },
   rowText: {
@@ -140,7 +141,7 @@ const styles = StyleSheet.create({
   label: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: fonts.semibold,
   },
   help: {
     color: colors.textFaint,
@@ -151,10 +152,10 @@ const styles = StyleSheet.create({
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.bgElevated,
+    backgroundColor: colors.cardRaised,
     borderRadius: radius.pill,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.cardBorder,
+    borderColor: colors.cardLine,
   },
   stepButton: {
     width: 34,
@@ -164,9 +165,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   stepButtonText: {
-    color: colors.accent,
+    color: colors.gold,
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     lineHeight: 20,
   },
   stepValue: {
@@ -174,7 +175,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: colors.text,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     fontVariant: ['tabular-nums'],
   },
 });

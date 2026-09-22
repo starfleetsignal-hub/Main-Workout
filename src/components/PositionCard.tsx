@@ -3,7 +3,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { fmtPrice, fmtSigned } from '../engine/engine';
 import type { OpenPosition, SymbolState } from '../engine/types';
 import { colors, pnlColor } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 import { radius, spacing } from '../theme/layout';
+import { AssetMark } from './AssetMark';
 import { Chip } from './Chip';
 
 export function PositionCard({
@@ -29,6 +31,7 @@ export function PositionCard({
     <View style={styles.card}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
+          <AssetMark symbol={position.symbol} size={26} />
           <Text style={styles.symbol}>{position.symbol}</Text>
           <Chip label={position.side === 'long' ? 'LONG' : 'SHORT'} tone={position.side === 'long' ? 'up' : 'down'} size="sm" />
           {!position.managed ? <Chip label="ADOPTED" tone="warn" size="sm" /> : null}
@@ -82,7 +85,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.cardBorder,
+    borderColor: colors.cardLine,
     padding: spacing.lg,
     marginBottom: spacing.md,
   },
@@ -99,11 +102,11 @@ const styles = StyleSheet.create({
   symbol: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   pnl: {
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     fontVariant: ['tabular-nums'],
   },
   metaRow: {
@@ -116,20 +119,20 @@ const styles = StyleSheet.create({
   metaLabel: {
     color: colors.textFaint,
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   metaValue: {
     color: colors.text,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: fonts.semibold,
     marginTop: 2,
     fontVariant: ['tabular-nums'],
   },
   track: {
     height: 5,
-    backgroundColor: colors.bgElevated,
+    backgroundColor: colors.cardRaised,
     borderRadius: radius.pill,
     marginTop: spacing.lg,
     overflow: 'visible',
@@ -174,6 +177,6 @@ const styles = StyleSheet.create({
   closeText: {
     color: colors.down,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 });

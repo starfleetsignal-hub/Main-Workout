@@ -15,7 +15,6 @@
  *   TRADERUNNER_LICENSE                your license key
  *   EXPO_PUBLIC_LICENSE_PUBLIC_KEY     or a .env file with it
  */
-import { createRequire } from 'node:module';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,7 +22,6 @@ import { loadPublicKeyHex, parseArgs, verifyLicense } from '../tools/license/lib
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
-const require = createRequire(import.meta.url);
 
 const args = parseArgs(process.argv.slice(2));
 
@@ -36,7 +34,7 @@ if (existsSync(envFile)) {
   }
 }
 
-const distDir = path.join(root, 'dist-node');
+const distDir = path.join(root, 'dist-esm');
 if (!existsSync(path.join(distDir, 'engine', 'engine.js'))) {
   console.error('Engine build missing. Run:  npx tsc -p tsconfig.node.json');
   process.exit(1);
@@ -70,10 +68,10 @@ if (!keyId || !secretKey) {
 const mode = args.live ? 'live' : (process.env.ALPACA_MODE ?? 'paper') === 'live' && !args.paper ? 'live' : 'paper';
 const feed = String(process.env.ALPACA_FEED ?? 'iex') === 'sip' ? 'sip' : 'iex';
 
-const { AlpacaClient } = require(path.join(distDir, 'broker/alpaca/rest.js'));
-const { AlpacaStreams } = require(path.join(distDir, 'broker/alpaca/stream.js'));
-const { TradingEngine } = require(path.join(distDir, 'engine/engine.js'));
-const { normalizeParameters, DEFAULT_PARAMETERS } = require(path.join(distDir, 'engine/parameters.js'));
+const { AlpacaClient } = await import(path.join(distDir, 'broker/alpaca/rest.js'));
+const { AlpacaStreams } = await import(path.join(distDir, 'broker/alpaca/stream.js'));
+const { TradingEngine } = await import(path.join(distDir, 'engine/engine.js'));
+const { normalizeParameters, DEFAULT_PARAMETERS } = await import(path.join(distDir, 'engine/parameters.js'));
 
 let params = normalizeParameters(DEFAULT_PARAMETERS);
 if (args.params) {

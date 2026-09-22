@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chip, ToggleChip } from '../../src/components/Chip';
 import { NumberSetting, SettingGroup, SwitchSetting } from '../../src/components/ParameterControls';
 import { useEngine } from '../../src/context/EngineContext';
 import { PARAMETER_BOUNDS, PARAMETER_PRESETS } from '../../src/engine/parameters';
 import { colors } from '../../src/theme/colors';
+import { fonts } from '../../src/theme/fonts';
 import { radius, shared, spacing } from '../../src/theme/layout';
 
 export default function ParametersScreen() {
+  const insets = useSafeAreaInsets();
   const { parameters: p, updateParameters, resetParameters, snapshot } = useEngine();
   const [symbolInput, setSymbolInput] = useState('');
 
@@ -37,7 +40,7 @@ export default function ParametersScreen() {
   };
 
   return (
-    <ScrollView style={shared.screen} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
+    <ScrollView style={shared.screen} contentContainerStyle={{ padding: spacing.lg, paddingTop: insets.top + 56, paddingBottom: spacing.xxl }}>
       <Text style={styles.intro}>
         These rules bound everything the engine may do. Changes apply immediately, including to positions already open.
       </Text>
@@ -54,7 +57,7 @@ export default function ParametersScreen() {
                 ])
               }
               accessibilityRole="button"
-              style={({ pressed }) => [styles.preset, pressed && { borderColor: colors.accent }]}
+              style={({ pressed }) => [styles.preset, pressed && { borderColor: colors.gold }]}
             >
               <Text style={styles.presetName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
                 {preset.name}
@@ -367,15 +370,15 @@ const styles = StyleSheet.create({
   preset: {
     flex: 1,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.cardBorder,
+    borderColor: colors.cardLine,
     borderRadius: radius.md,
     padding: spacing.md,
-    backgroundColor: colors.bgElevated,
+    backgroundColor: colors.cardRaised,
   },
   presetName: {
     color: colors.text,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   presetDesc: {
     color: colors.textFaint,
@@ -386,7 +389,7 @@ const styles = StyleSheet.create({
   symbolBox: {
     padding: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
+    borderBottomColor: colors.cardLine,
   },
   symbolWrap: {
     flexDirection: 'row',
@@ -397,20 +400,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.accentSoft,
+    backgroundColor: colors.goldSoft,
     borderRadius: radius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
   },
   symbolChipText: {
-    color: colors.accent,
+    color: colors.gold,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   symbolChipX: {
-    color: colors.accent,
+    color: colors.gold,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     opacity: 0.7,
   },
   hint: {

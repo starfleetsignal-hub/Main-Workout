@@ -1,7 +1,8 @@
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Linking,
   Platform,
@@ -12,118 +13,218 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ToggleChip } from '../src/components/Chip';
+import { ShieldIcon } from '../src/components/icons';
+import { defaultWatchlistFor, describeVenue, VENUE_LIST } from '../src/broker/registry';
+import type { VenueCredentials, VenueId } from '../src/broker/venues';
 import { useCredentials } from '../src/context/CredentialsContext';
-import type { AlpacaFeed, AlpacaMode } from '../src/broker/alpaca/rest';
+import { useEngine } from '../src/context/EngineContext';
 import { colors } from '../src/theme/colors';
+import { fonts } from '../src/theme/fonts';
 import { radius, shared, spacing } from '../src/theme/layout';
 
+/**
+ * One connect screen for every venue. The fields come from the venue
+ * descriptor, so adding a venue does not mean writing another form.
+ */
 export default function ConnectScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams<{ venue?: string }>();
   const { credentials, save, verifying } = useCredentials();
-  const [keyId, setKeyId] = useState(credentials?.keyId ?? '');
-  const [secret, setSecret] = useState('');
-  const [mode, setMode] = useState<AlpacaMode>(credentials?.mode ?? 'paper');
-  const [feed, setFeed] = useState<AlpacaFeed>(credentials?.feed ?? 'iex');
+  const { parameters, updateParameters } = useEngine();
+
+  const venueId = (params.venue as VenueId) ?? credentials?.venue ?? 'alpaca';
+  const venue = useMemo(() => {
+    try {
+      return describeVenue(venueId);
+    } catch {
+      return VENUE_LIST[0];
+    }
+  }, [venueId]);
+
+  const editingSame = credentials?.venue === venue.id;
+  const [values, setValues] = useState<Record<string, string>>(() => {
+    const seed: Record<string, string> = {};
+    for (const field of venue.credentialFields) {
+      // Secrets are never pre-filled; the stored value is write-only from here.
+      seed[field.key] = editingSame && !field.secret ? String(credentials?.[field.key] ?? '') : '';
+    }
+    return seed;
+  });
+  const [mode, setMode] = useState<string>(editingSame ? credentials?.mode ?? defaultMode(venue.id) : defaultMode(venue.id));
+  const [feed, setFeed] = useState<string>(editingSame ? credentials?.feed ?? 'iex' : 'iex');
   const [error, setError] = useState<string | null>(null);
+  const [acknowledged, setAcknowledged] = useState(!venue.warning);
+
+  const required = venue.credentialFields.filter((f) => !f.optional);
+  const complete = required.every((f) => values[f.key]?.trim());
 
   const onSave = async () => {
     setError(null);
-    const res = await save(keyId, secret, mode, feed);
-    if (res.ok) router.back();
-    else setError(res.error);
+    const creds: VenueCredentials = { venue: venue.id, ...values };
+    if (venue.capabilities.paper) creds.mode = mode;
+    if (venue.id === 'alpaca') creds.feed = feed;
+
+    const res = await save(creds);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+
+    // Switching venues leaves a watchlist the new venue cannot trade, so
+    // offer to replace it rather than starting in a broken state.
+    const stale = parameters.watchlist.filter((s) => !defaultWatchlistFor(venue.id).includes(s));
+    if (credentials?.venue !== venue.id && stale.length > 0) {
+      Alert.alert(
+        `Use the ${venue.name} watchlist?`,
+        `Your current watchlist was set up for another venue. Replace it with symbols ${venue.name} can trade?`,
+        [
+          { text: 'Keep mine', style: 'cancel', onPress: () => router.back() },
+          {
+            text: 'Replace',
+            onPress: () => {
+              updateParameters({ watchlist: defaultWatchlistFor(venue.id) });
+              router.back();
+            },
+          },
+        ]
+      );
+      return;
+    }
+    router.back();
   };
 
   return (
     <KeyboardAvoidingView style={shared.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }} keyboardShouldPersistTaps="handled">
-        <Text style={styles.intro}>
-          TradeRunner trades through your own Alpaca account. Generate API keys in the Alpaca dashboard and paste them
-          here. They are stored in this device's keychain and sent only to Alpaca.
-        </Text>
+      <ScrollView
+        contentContainerStyle={{ padding: spacing.lg, paddingTop: insets.top + 64, paddingBottom: spacing.xxl }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={styles.venueName}>{venue.name}</Text>
+        <Text style={styles.intro}>{venue.blurb}</Text>
 
-        <Text style={styles.label}>Mode</Text>
-        <View style={styles.chipRow}>
-          <ToggleChip label="Paper" active={mode === 'paper'} onPress={() => setMode('paper')} />
-          <ToggleChip label="Live" active={mode === 'live'} onPress={() => setMode('live')} />
-        </View>
-        {mode === 'live' ? (
-          <Text style={styles.warning}>
-            Live mode places orders with real money. Run the engine in paper mode first and confirm it behaves the way
-            you expect.
-          </Text>
+        {venue.warning ? (
+          <View style={[styles.warnBox, venue.maturity === 'experimental' && styles.warnBoxSevere]}>
+            <View style={styles.warnHead}>
+              <ShieldIcon size={17} color={venue.maturity === 'experimental' ? colors.down : colors.gold} />
+              <Text style={[styles.warnTitle, venue.maturity === 'experimental' && { color: colors.down }]}>
+                {venue.maturity === 'experimental' ? 'Read this before connecting' : 'Before you connect'}
+              </Text>
+            </View>
+            <Text style={styles.warnText}>{venue.warning}</Text>
+            <Pressable
+              onPress={() => setAcknowledged((a) => !a)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: acknowledged }}
+              style={styles.ackRow}
+            >
+              <View style={[styles.checkbox, acknowledged && styles.checkboxOn]}>
+                {acknowledged ? <Text style={styles.checkmark}>✓</Text> : null}
+              </View>
+              <Text style={styles.ackText}>I understand and want to continue</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        {venue.capabilities.paper ? (
+          <>
+            <Text style={styles.label}>Mode</Text>
+            <View style={styles.chipRow}>
+              <ToggleChip
+                label={venue.id === 'uphold' ? 'Sandbox' : 'Paper'}
+                active={mode !== 'live'}
+                onPress={() => setMode(venue.id === 'uphold' ? 'sandbox' : 'paper')}
+              />
+              <ToggleChip label="Live" active={mode === 'live'} onPress={() => setMode('live')} />
+            </View>
+            <Text style={mode === 'live' ? styles.warning : styles.hint}>
+              {mode === 'live'
+                ? 'Live mode places orders with real money. Run it in paper first and confirm it behaves the way you expect.'
+                : 'No real money moves in this mode. Start here.'}
+            </Text>
+          </>
         ) : (
-          <Text style={styles.hint}>Paper keys come from the paper-trading section of the dashboard, not the live one.</Text>
+          <View style={styles.noPaper}>
+            <Text style={styles.noPaperText}>
+              {venue.name} has no paper mode. Every order this venue accepts is real, so size your first runs small.
+            </Text>
+          </View>
         )}
 
-        <Text style={styles.label}>Data feed</Text>
-        <View style={styles.chipRow}>
-          <ToggleChip label="IEX (free)" active={feed === 'iex'} onPress={() => setFeed('iex')} />
-          <ToggleChip label="SIP (paid)" active={feed === 'sip'} onPress={() => setFeed('sip')} />
-        </View>
-        <Text style={styles.hint}>
-          IEX is included with every account and covers a slice of total volume. SIP is the full consolidated tape and
-          needs a paid market-data subscription.
-        </Text>
+        {venue.id === 'alpaca' ? (
+          <>
+            <Text style={styles.label}>Data feed</Text>
+            <View style={styles.chipRow}>
+              <ToggleChip label="IEX (free)" active={feed !== 'sip'} onPress={() => setFeed('iex')} />
+              <ToggleChip label="SIP (paid)" active={feed === 'sip'} onPress={() => setFeed('sip')} />
+            </View>
+            <Text style={styles.hint}>
+              IEX is included with every account and covers a slice of total volume. SIP is the full consolidated tape
+              and needs a paid market-data subscription. Neither affects crypto.
+            </Text>
+          </>
+        ) : null}
 
-        <Text style={styles.label}>API key ID</Text>
-        <TextInput
-          value={keyId}
-          onChangeText={setKeyId}
-          placeholder="PK…"
-          placeholderTextColor={colors.textFaint}
-          autoCapitalize="characters"
-          autoCorrect={false}
-          style={shared.input}
-          accessibilityLabel="API key ID"
-        />
-
-        <Text style={styles.label}>API secret key</Text>
-        <TextInput
-          value={secret}
-          onChangeText={setSecret}
-          placeholder={credentials ? 'Enter the secret again to update' : 'Secret'}
-          placeholderTextColor={colors.textFaint}
-          autoCapitalize="none"
-          autoCorrect={false}
-          secureTextEntry
-          style={shared.input}
-          accessibilityLabel="API secret key"
-        />
+        {venue.credentialFields.map((field) => (
+          <View key={field.key}>
+            <Text style={styles.label}>
+              {field.label}
+              {field.optional ? ' (optional)' : ''}
+            </Text>
+            <TextInput
+              value={values[field.key]}
+              onChangeText={(t) => {
+                setValues((v) => ({ ...v, [field.key]: t }));
+                setError(null);
+              }}
+              placeholder={field.placeholder}
+              placeholderTextColor={colors.textFaint}
+              autoCapitalize="none"
+              autoCorrect={false}
+              secureTextEntry={field.secret && !field.multiline}
+              multiline={field.multiline}
+              style={[shared.input, field.multiline && styles.multiline]}
+              accessibilityLabel={field.label}
+            />
+            {field.help ? <Text style={styles.hint}>{field.help}</Text> : null}
+          </View>
+        ))}
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Pressable
           onPress={onSave}
-          disabled={verifying || !keyId.trim() || !secret.trim()}
+          disabled={verifying || !complete || !acknowledged}
           accessibilityRole="button"
           style={({ pressed }) => [
             shared.button,
             { marginTop: spacing.xl },
-            (verifying || !keyId.trim() || !secret.trim()) && { opacity: 0.5 },
-            pressed && { opacity: 0.8 },
+            (verifying || !complete || !acknowledged) && { opacity: 0.45 },
+            pressed && { opacity: 0.85 },
           ]}
         >
           {verifying ? (
-            <ActivityIndicator color={colors.onAccent} />
+            <ActivityIndicator color={colors.onGold} />
           ) : (
             <Text style={shared.buttonText}>Verify and save</Text>
           )}
         </Pressable>
 
         <Pressable
-          onPress={() => void Linking.openURL('https://app.alpaca.markets/paper/dashboard/overview').catch(() => {})}
+          onPress={() => void Linking.openURL(venue.docsUrl).catch(() => {})}
           accessibilityRole="link"
           style={({ pressed }) => [styles.link, pressed && { opacity: 0.6 }]}
         >
-          <Text style={styles.linkText}>Open the Alpaca dashboard</Text>
+          <Text style={styles.linkText}>{venue.name} API documentation</Text>
         </Pressable>
 
         <View style={styles.permBox}>
           <Text style={styles.permTitle}>What the keys are used for</Text>
           <Text style={styles.permText}>
-            Reading your account equity and buying power, streaming prices and news, submitting and cancelling orders,
-            and closing positions. Nothing else, and nothing is sent anywhere except Alpaca.
+            Reading your balances, streaming or polling prices, submitting and cancelling orders, and closing
+            positions. Nothing else. Keys are stored in this device&apos;s keychain and are sent only to {venue.name}.
           </Text>
         </View>
       </ScrollView>
@@ -131,16 +232,27 @@ export default function ConnectScreen() {
   );
 }
 
+function defaultMode(id: VenueId): string {
+  return id === 'uphold' ? 'sandbox' : 'paper';
+}
+
 const styles = StyleSheet.create({
+  venueName: {
+    color: colors.text,
+    fontSize: 24,
+    fontFamily: fonts.bold,
+  },
   intro: {
     color: colors.textMuted,
-    fontSize: 13,
+    fontSize: 13.5,
     lineHeight: 20,
+    marginTop: 4,
+    fontFamily: fonts.regular,
   },
   label: {
     color: colors.textFaint,
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: 1,
     textTransform: 'uppercase',
     marginTop: spacing.xl,
@@ -155,45 +267,124 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     marginTop: spacing.sm,
+    fontFamily: fonts.regular,
   },
   warning: {
-    color: colors.warn,
+    color: colors.gold,
     fontSize: 12,
     lineHeight: 18,
     marginTop: spacing.sm,
+    fontFamily: fonts.regular,
+  },
+  multiline: {
+    minHeight: 84,
+    textAlignVertical: 'top',
+    fontSize: 12.5,
+  },
+  warnBox: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.goldSoft,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.goldLine,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  warnBoxSevere: {
+    backgroundColor: colors.downSoft,
+    borderColor: colors.down,
+  },
+  warnHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: 6,
+  },
+  warnTitle: {
+    color: colors.gold,
+    fontSize: 13,
+    fontFamily: fonts.bold,
+  },
+  warnText: {
+    color: colors.textMuted,
+    fontSize: 12.5,
+    lineHeight: 19,
+    fontFamily: fonts.regular,
+  },
+  ackRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 7,
+    borderWidth: 1.5,
+    borderColor: colors.textFaint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxOn: {
+    backgroundColor: colors.gold,
+    borderColor: colors.gold,
+  },
+  checkmark: {
+    color: colors.onGold,
+    fontSize: 13,
+    fontFamily: fonts.bold,
+  },
+  ackText: {
+    color: colors.text,
+    fontSize: 13,
+    fontFamily: fonts.medium,
+  },
+  noPaper: {
+    marginTop: spacing.lg,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  noPaperText: {
+    color: colors.textMuted,
+    fontSize: 12.5,
+    lineHeight: 19,
+    fontFamily: fonts.regular,
   },
   error: {
     color: colors.down,
     fontSize: 13,
     lineHeight: 19,
     marginTop: spacing.md,
+    fontFamily: fonts.regular,
   },
   link: {
     marginTop: spacing.lg,
     alignItems: 'center',
   },
   linkText: {
-    color: colors.accent,
+    color: colors.cyan,
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: fonts.semibold,
   },
   permBox: {
     marginTop: spacing.xl,
     backgroundColor: colors.card,
     borderRadius: radius.md,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.cardBorder,
+    borderColor: colors.cardLine,
     padding: spacing.lg,
   },
   permTitle: {
     color: colors.text,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     marginBottom: 6,
   },
   permText: {
     color: colors.textFaint,
     fontSize: 12,
     lineHeight: 18,
+    fontFamily: fonts.regular,
   },
 });

@@ -1,14 +1,17 @@
 import React, { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NewsRow } from '../../src/components/NewsRow';
 import { ToggleChip } from '../../src/components/Chip';
 import { useEngine } from '../../src/context/EngineContext';
 import { colors } from '../../src/theme/colors';
+import { fonts } from '../../src/theme/fonts';
 import { shared, spacing } from '../../src/theme/layout';
 
 type Filter = 'all' | 'watchlist' | 'positive' | 'negative';
 
 export default function NewsScreen() {
+  const insets = useSafeAreaInsets();
   const { snapshot, parameters } = useEngine();
   const [filter, setFilter] = useState<Filter>('watchlist');
 
@@ -30,7 +33,7 @@ export default function NewsScreen() {
 
   return (
     <View style={shared.screen}>
-      <View style={styles.filters}>
+      <View style={[styles.filters, { paddingTop: insets.top + 56 }]}>
         {(['watchlist', 'all', 'positive', 'negative'] as Filter[]).map((f) => (
           <ToggleChip key={f} label={label(f)} active={filter === f} onPress={() => setFilter(f)} />
         ))}

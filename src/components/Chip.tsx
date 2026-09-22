@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 import { radius, spacing } from '../theme/layout';
 
 export function Chip({
@@ -13,11 +14,11 @@ export function Chip({
   size?: 'sm' | 'md';
 }) {
   const palette = {
-    neutral: { bg: colors.bgElevated, fg: colors.textMuted },
+    neutral: { bg: 'rgba(255,255,255,0.06)', fg: colors.textMuted },
     up: { bg: colors.upSoft, fg: colors.up },
     down: { bg: colors.downSoft, fg: colors.down },
-    warn: { bg: colors.warnSoft, fg: colors.warn },
-    accent: { bg: colors.accentSoft, fg: colors.accent },
+    warn: { bg: colors.goldSoft, fg: colors.gold },
+    accent: { bg: colors.cyanSoft, fg: colors.cyan },
     gold: { bg: colors.goldSoft, fg: colors.gold },
   }[tone];
 
@@ -51,11 +52,11 @@ export function ToggleChip({
       style={({ pressed }) => [
         styles.chip,
         styles.toggle,
-        active && { backgroundColor: colors.accentSoft, borderColor: colors.accent },
+        active && { backgroundColor: colors.goldSoft, borderColor: colors.goldLine },
         pressed && { opacity: 0.7 },
       ]}
     >
-      <Text style={[styles.text, { color: active ? colors.accent : colors.textMuted }]}>{label}</Text>
+      <Text style={[styles.text, { color: active ? colors.gold : colors.textMuted }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -69,13 +70,13 @@ const styles = StyleSheet.create({
   },
   toggle: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.cardBorder,
+    borderColor: colors.cardLine,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
   text: {
     fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.3,
+    fontFamily: fonts.bold,
+    letterSpacing: 0.4,
   },
 });

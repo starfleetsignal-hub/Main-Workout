@@ -1,13 +1,11 @@
 import assert from 'node:assert/strict';
-import { createRequire } from 'node:module';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-const require = createRequire(import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const { TradingEngine } = require(path.join(root, 'dist-node/engine/engine.js'));
-const { normalizeParameters, DEFAULT_PARAMETERS } = require(path.join(root, 'dist-node/engine/parameters.js'));
+const { TradingEngine } = await import(path.join(root, 'dist-esm/engine/engine.js'));
+const { normalizeParameters, DEFAULT_PARAMETERS } = await import(path.join(root, 'dist-esm/engine/parameters.js'));
 
 const MINUTE = 60_000;
 const T0 = Date.UTC(2026, 0, 5, 15, 0, 0); // a Monday, mid-session
@@ -545,4 +543,141 @@ test('stock positions are flattened before the close', async () => {
 
   assert.ok(broker.closed.includes('AAPL'));
   assert.equal(engine.snapshot().trades[0].exitReason, 'market_close');
+});
+
+// ---------------------------------------------------------------------------
+// Venue capabilities
+// ---------------------------------------------------------------------------
+
+test('a balance with no cost basis is adopted against the current price', async () => {
+  const bars = { 'BTC/USD': bullishBars('BTC/USD', 60, 50_000) };
+  const { engine, broker } = makeEngine(
+    { watchlist: ['BTC/USD'], tradeStocks: false, minSignalScore: 100, stopLossPct: 2 },
+    { bars, isOpen: false }
+  );
+  // An exchange reports a balance with no average entry price.
+  broker.capabilities = { news: false, shorts: false, brokerPositions: false };
+  broker.positions.push({
+    symbol: 'BTC/USD',
+    assetClass: 'crypto',
+    qty: 0.5,
+    side: 'long',
+    avgEntryPrice: 0,
+    marketValue: 0,
+    unrealizedPnl: 0,
+  });
+
+  await engine.start();
+  const pos = engine.snapshot().positions['BTC/USD'];
+  assert.ok(pos, 'the balance should be adopted');
+  const last = bars['BTC/USD'].at(-1).c;
+  assert.equal(pos.entryPrice, last, 'entry basis should be the current price');
+  assert.ok(pos.stopPrice > 0, 'a zero stop would fire instantly');
+  assert.ok(pos.takeProfitPrice > pos.entryPrice);
+  assert.match(pos.entryReason, /existing balance/);
+});
+
+test('an adopted balance is not immediately closed by its own exit levels', async () => {
+  const bars = { 'BTC/USD': bullishBars('BTC/USD', 60, 50_000) };
+  const { engine, broker, streams } = makeEngine(
+    { watchlist: ['BTC/USD'], tradeStocks: false, minSignalScore: 100, trailingStopPct: 0 },
+    { bars, isOpen: false }
+  );
+  broker.capabilities = { news: false, shorts: false, brokerPositions: false };
+  broker.positions.push({
+    symbol: 'BTC/USD',
+    assetClass: 'crypto',
+    qty: 0.5,
+    side: 'long',
+    avgEntryPrice: 0,
+    marketValue: 0,
+    unrealizedPnl: 0,
+  });
+  await engine.start();
+
+  const last = bars['BTC/USD'].at(-1).c;
+  streams.handlers.onTick('BTC/USD', last, 1, T0);
+  await settle();
+
+  assert.ok(engine.snapshot().positions['BTC/USD'], 'should still be open at the adoption price');
+  assert.deepEqual(broker.closed, []);
+});
+
+test('a venue that cannot short skips a short signal', async () => {
+  // A falling series so the short side scores best.
+  const closes = Array.from({ length: 60 }, (_, i) => 100 * (1 - i * 0.0025));
+  const falling = closes.map((c, i) => ({
+    t: T0 - (60 - i) * MINUTE,
+    o: c * 1.001,
+    h: c * 1.002,
+    l: c * 0.9985,
+    c,
+    v: 10_000,
+  }));
+  falling[falling.length - 1].v = 40_000;
+
+  const { engine, broker, streams } = makeEngine(
+    { watchlist: ['AAPL'], tradeCrypto: false, allowShorts: true, minSignalScore: 55 },
+    { bars: { AAPL: falling } }
+  );
+  broker.capabilities = { shorts: false, news: true, brokerPositions: true };
+
+  await engine.start();
+  streams.handlers.onTick('AAPL', falling.at(-1).c * 0.99, 10, T0);
+  await settle();
+
+  assert.equal(broker.orders.length, 0, 'no order should be placed');
+  assert.ok(
+    engine.snapshot().activity.some((e) => e.message.includes('cannot sell short')),
+    'the skip should be explained in the log'
+  );
+});
+
+test('a venue with no news feed says so and scores news neutral', async () => {
+  const bars = { 'BTC/USD': bullishBars('BTC/USD', 60, 50_000) };
+  const { engine, broker } = makeEngine(
+    { watchlist: ['BTC/USD'], tradeStocks: false, minSignalScore: 100 },
+    { bars, isOpen: false, news: [{ id: 'n', headline: 'surge', summary: '', source: 's', symbols: ['BTC/USD'], createdAt: T0 }] }
+  );
+  broker.capabilities = { news: false, shorts: false, brokerPositions: false };
+
+  await engine.start();
+  const snap = engine.snapshot();
+  assert.equal(snap.news.length, 0, 'no news should be loaded');
+  assert.equal(snap.symbols['BTC/USD'].newsScore, 0);
+  assert.ok(snap.activity.some((e) => e.message.includes('no news feed')));
+});
+
+test('the daily loss halt works on a venue with no prior-day equity mark', async () => {
+  const bars = { 'BTC/USD': bullishBars('BTC/USD', 60, 50_000) };
+  const { engine, broker } = makeEngine(
+    { watchlist: ['BTC/USD'], tradeStocks: false, maxDailyLossPct: 2, minSignalScore: 100 },
+    { bars, isOpen: false, equity: 10_000, lastEquity: 10_000 }
+  );
+  broker.capabilities = { news: false, shorts: false, brokerPositions: false };
+  await engine.start();
+
+  // An exchange reports lastEquity === equity, so the engine uses the equity
+  // it first saw this session as the baseline.
+  broker.equity = 9_700;
+  broker.lastEquity = 9_700;
+  await engine.housekeeping();
+  await settle();
+
+  assert.equal(engine.snapshot().status, 'halted');
+});
+
+test('a 1% drop does not trip a 2% daily loss limit', async () => {
+  const bars = { 'BTC/USD': bullishBars('BTC/USD', 60, 50_000) };
+  const { engine, broker } = makeEngine(
+    { watchlist: ['BTC/USD'], tradeStocks: false, maxDailyLossPct: 2, minSignalScore: 100 },
+    { bars, isOpen: false, equity: 10_000, lastEquity: 10_000 }
+  );
+  broker.capabilities = { news: false, shorts: false, brokerPositions: false };
+  await engine.start();
+  broker.equity = 9_900;
+  broker.lastEquity = 9_900;
+  await engine.housekeeping();
+  await settle();
+  assert.equal(engine.snapshot().status, 'running');
 });

@@ -13,7 +13,7 @@ import { generateKeyPair, issueLicense } from '../tools/license/lib.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const { verifyLicenseKey, base64UrlDecode, normalizeKeyInput, describeLicenseFailure } = await import(
-  path.join(root, 'dist-esm/format.js')
+  path.join(root, 'dist-esm/license/format.js')
 );
 
 function freshKeys() {

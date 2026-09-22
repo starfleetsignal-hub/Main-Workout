@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chip } from '../../src/components/Chip';
 import { NewsRow } from '../../src/components/NewsRow';
 import { Sparkline } from '../../src/components/Sparkline';
@@ -8,9 +9,11 @@ import { StatTile } from '../../src/components/StatTile';
 import { useEngine } from '../../src/context/EngineContext';
 import { fmtPrice, fmtSigned } from '../../src/engine/engine';
 import { colors, pnlColor } from '../../src/theme/colors';
+import { fonts } from '../../src/theme/fonts';
 import { radius, shared, spacing } from '../../src/theme/layout';
 
 export default function SymbolScreen() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const symbol = decodeURIComponent(String(id ?? ''));
   const navigation = useNavigation();
@@ -29,7 +32,7 @@ export default function SymbolScreen() {
 
   if (!state) {
     return (
-      <View style={[shared.screen, styles.center]}>
+      <View style={[shared.screen, styles.center, { paddingTop: insets.top + 56 }]}>
         <Text style={styles.placeholder}>{symbol} is not being watched.</Text>
       </View>
     );
@@ -38,7 +41,7 @@ export default function SymbolScreen() {
   const ind = state.indicators;
 
   return (
-    <ScrollView style={shared.screen} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
+    <ScrollView style={shared.screen} contentContainerStyle={{ padding: spacing.lg, paddingTop: insets.top + 56, paddingBottom: spacing.xxl }}>
       <View style={styles.priceRow}>
         <View>
           <Text style={styles.price}>{state.lastPrice ? fmtPrice(state.lastPrice) : '—'}</Text>
@@ -99,7 +102,7 @@ export default function SymbolScreen() {
                       styles.componentFill,
                       {
                         width: `${Math.max(0, Math.min(100, (c.points / c.max) * 100))}%`,
-                        backgroundColor: c.points > 0 ? colors.accent : colors.divider,
+                        backgroundColor: c.points > 0 ? colors.gold : colors.cardLine,
                       },
                     ]}
                   />
@@ -158,19 +161,19 @@ const styles = StyleSheet.create({
   price: {
     color: colors.text,
     fontSize: 32,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     fontVariant: ['tabular-nums'],
   },
   change: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: fonts.semibold,
     marginTop: 4,
   },
   positionBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.bgElevated,
+    backgroundColor: colors.cardRaised,
     borderRadius: radius.md,
     padding: spacing.md,
     marginBottom: spacing.md,
@@ -189,7 +192,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     color: colors.textFaint,
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: 1,
     textTransform: 'uppercase',
     marginTop: spacing.xl,
@@ -199,7 +202,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.cardBorder,
+    borderColor: colors.cardLine,
     overflow: 'hidden',
   },
   scoreHeader: {
@@ -208,12 +211,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     padding: spacing.lg,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
+    borderBottomColor: colors.cardLine,
   },
   scoreValue: {
     color: colors.text,
     fontSize: 26,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     fontVariant: ['tabular-nums'],
   },
   scoreOutOf: {
@@ -225,7 +228,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
+    borderBottomColor: colors.cardLine,
   },
   componentText: {
     marginBottom: 6,
@@ -233,7 +236,7 @@ const styles = StyleSheet.create({
   componentName: {
     color: colors.text,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   componentDetail: {
     color: colors.textFaint,
@@ -249,7 +252,7 @@ const styles = StyleSheet.create({
   componentBar: {
     flex: 1,
     height: 4,
-    backgroundColor: colors.bgElevated,
+    backgroundColor: colors.cardRaised,
     borderRadius: radius.pill,
     overflow: 'hidden',
   },
@@ -260,7 +263,7 @@ const styles = StyleSheet.create({
   componentPoints: {
     color: colors.textFaint,
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     fontVariant: ['tabular-nums'],
     minWidth: 38,
     textAlign: 'right',
@@ -272,7 +275,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm + 2,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
+    borderBottomColor: colors.cardLine,
   },
   blockerDot: {
     color: colors.down,

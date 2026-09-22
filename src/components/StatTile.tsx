@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 import { radius, spacing } from '../theme/layout';
 
 export function StatTile({
@@ -38,14 +39,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: radius.md,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.cardBorder,
+    borderColor: colors.cardLine,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
   },
   label: {
     color: colors.textFaint,
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     marginBottom: 6,
@@ -53,7 +54,7 @@ const styles = StyleSheet.create({
   value: {
     color: colors.text,
     fontSize: 19,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     fontVariant: ['tabular-nums'],
   },
   sub: {

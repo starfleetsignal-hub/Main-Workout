@@ -2,11 +2,12 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { ActivityEvent } from '../engine/types';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 import { spacing } from '../theme/layout';
 
 const LEVEL_COLOR: Record<ActivityEvent['level'], string> = {
   info: colors.textFaint,
-  signal: colors.accent,
+  signal: colors.gold,
   order: colors.up,
   warn: colors.warn,
   error: colors.down,
@@ -63,7 +64,7 @@ const styles = StyleSheet.create({
   symbol: {
     color: colors.textMuted,
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     marginTop: 1,
   },
   message: {

@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatRelative } from '../../src/components/ActivityRow';
 import { Chip } from '../../src/components/Chip';
 import { PositionCard } from '../../src/components/PositionCard';
@@ -8,9 +9,11 @@ import { useEngine } from '../../src/context/EngineContext';
 import { fmtPrice, fmtSigned } from '../../src/engine/engine';
 import type { TradeRecord } from '../../src/engine/types';
 import { colors, pnlColor } from '../../src/theme/colors';
+import { fonts } from '../../src/theme/fonts';
 import { radius, shared, spacing } from '../../src/theme/layout';
 
 export default function PositionsScreen() {
+  const insets = useSafeAreaInsets();
   const { snapshot, closePosition } = useEngine();
   const positions = Object.values(snapshot.positions);
   const closed = snapshot.trades;
@@ -38,7 +41,7 @@ export default function PositionsScreen() {
   };
 
   return (
-    <ScrollView style={shared.screen} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
+    <ScrollView style={shared.screen} contentContainerStyle={{ padding: spacing.lg, paddingTop: insets.top + 56, paddingBottom: spacing.xxl }}>
       <View style={styles.tiles}>
         <StatTile label="Closed" value={String(stats.count)} sub="this session" />
         <StatTile label="Win rate" value={stats.count ? `${stats.winRate.toFixed(0)}%` : '—'} />
@@ -108,7 +111,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     color: colors.textFaint,
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: 1,
     textTransform: 'uppercase',
     marginTop: spacing.xl,
@@ -118,7 +121,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.cardBorder,
+    borderColor: colors.cardLine,
     padding: spacing.lg,
   },
   placeholder: {
@@ -130,7 +133,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.cardBorder,
+    borderColor: colors.cardLine,
     overflow: 'hidden',
   },
   tradeRow: {
@@ -139,7 +142,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
+    borderBottomColor: colors.cardLine,
     gap: spacing.md,
   },
   tradeLeft: {
@@ -154,7 +157,7 @@ const styles = StyleSheet.create({
   tradeSymbol: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   tradeMeta: {
     color: colors.textFaint,
@@ -167,7 +170,7 @@ const styles = StyleSheet.create({
   },
   tradePnl: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     fontVariant: ['tabular-nums'],
   },
   tradePct: {

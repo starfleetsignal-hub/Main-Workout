@@ -3,7 +3,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { fmtPrice } from '../engine/engine';
 import type { OpenPosition, Signal, SymbolState } from '../engine/types';
 import { colors, pnlColor } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 import { radius, spacing } from '../theme/layout';
+import { AssetMark } from './AssetMark';
 import { Chip } from './Chip';
 import { Sparkline } from './Sparkline';
 
@@ -27,8 +29,9 @@ export function SymbolRow({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.bgElevated }]}
+      style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.cardRaised }]}
     >
+      <AssetMark symbol={state.symbol} size={34} />
       <View style={styles.left}>
         <View style={styles.symbolLine}>
           <Text style={styles.symbol}>{state.symbol}</Text>
@@ -76,7 +79,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
+    borderBottomColor: colors.cardLine,
   },
   left: {
     flex: 1,
@@ -90,7 +93,7 @@ const styles = StyleSheet.create({
   symbol: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   sub: {
     color: colors.textFaint,
@@ -105,12 +108,12 @@ const styles = StyleSheet.create({
   price: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     fontVariant: ['tabular-nums'],
   },
   change: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: fonts.semibold,
     marginTop: 3,
     fontVariant: ['tabular-nums'],
   },
@@ -131,7 +134,7 @@ const styles = StyleSheet.create({
   },
   scoreText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     marginTop: 3,
     fontVariant: ['tabular-nums'],
   },

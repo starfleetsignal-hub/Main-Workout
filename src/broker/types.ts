@@ -38,6 +38,12 @@ export type RawNews = Omit<NewsItem, 'sentiment' | 'confidence'>;
 
 export interface Broker {
   readonly label: string;
+  /**
+   * What this venue can do. The engine reads it rather than assuming every
+   * venue behaves like a full brokerage. Omitted by test doubles, in which
+   * case the engine falls back to its most permissive defaults.
+   */
+  readonly capabilities?: import('./venues').VenueCapabilities;
   getAccount(): Promise<AccountSnapshot>;
   getClock(): Promise<MarketClock>;
   getPositions(): Promise<BrokerPosition[]>;

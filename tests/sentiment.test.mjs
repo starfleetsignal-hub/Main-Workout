@@ -1,12 +1,10 @@
 import assert from 'node:assert/strict';
-import { createRequire } from 'node:module';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-const require = createRequire(import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const { scoreSentiment, aggregateNews } = require(path.join(root, 'dist-node/engine/sentiment.js'));
+const { scoreSentiment, aggregateNews } = await import(path.join(root, 'dist-esm/engine/sentiment.js'));
 
 test('clearly bullish copy scores positive', () => {
   const r = scoreSentiment('Nvidia beats estimates and raises guidance; shares surge to a record high');

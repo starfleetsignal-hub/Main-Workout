@@ -80,6 +80,8 @@ export class TradingEngine {
 
   private pendingOrders = new Set<string>();
   private lastEvalAt: Record<string, number> = {};
+  /** Equity first seen today, used where the venue publishes no prior-day mark. */
+  private dayStartEquity: number | null = null;
   private housekeepingTimer: ReturnType<typeof setInterval> | null = null;
   private listeners = new Set<(s: EngineSnapshot) => void>();
   private emitTimer: ReturnType<typeof setTimeout> | null = null;
@@ -328,6 +330,10 @@ export class TradingEngine {
     if (this.dailyLossBreached()) return;
 
     const side = signal.side as Side;
+    if (!this.venueAllows(side)) {
+      this.log('warn', `${this.deps.broker.label} cannot sell short, so this signal is skipped`, symbol);
+      return;
+    }
     const price = st.lastPrice;
     const qty = this.sizePosition(st, price);
     if (qty <= 0) {
@@ -512,11 +518,22 @@ export class TradingEngine {
     const [account, clock] = await Promise.all([this.deps.broker.getAccount(), this.deps.broker.getClock()]);
     this.account = account;
     this.clock = clock;
+    if (this.dayStartEquity === null && account.equity > 0) this.dayStartEquity = account.equity;
   }
 
+  /**
+   * Measures the day against the broker's own prior-day equity mark when it
+   * publishes one. Exchanges and wallets do not, so the engine falls back to
+   * the equity it first saw this session, which is the only baseline it can
+   * honestly claim.
+   */
   private dailyLossBreached(): boolean {
-    if (!this.account || this.account.lastEquity <= 0) return false;
-    const pct = ((this.account.equity - this.account.lastEquity) / this.account.lastEquity) * 100;
+    const account = this.account;
+    if (!account) return false;
+    const baseline =
+      account.lastEquity > 0 && account.lastEquity !== account.equity ? account.lastEquity : this.dayStartEquity;
+    if (!baseline || baseline <= 0) return false;
+    const pct = ((account.equity - baseline) / baseline) * 100;
     return pct <= -this.params.maxDailyLossPct;
   }
 
@@ -526,6 +543,7 @@ export class TradingEngine {
       this.tradingDay = day;
       this.tradesToday = 0;
       this.realizedPnlToday = 0;
+      this.dayStartEquity = this.account?.equity ?? null;
     }
   }
 
@@ -542,23 +560,48 @@ export class TradingEngine {
         continue;
       }
       if (!this.params.watchlist.includes(bp.symbol)) continue; // not ours to manage
-      this.ensureSymbol(bp.symbol);
+      const st = this.ensureSymbol(bp.symbol);
+
+      /*
+       * Exchanges report a balance, not a position, so there is no average
+       * entry price to inherit. Anchoring the exits on zero would put the
+       * stop at zero and trigger the target immediately, so fall back to the
+       * current price and say so plainly: the stop protects from here, not
+       * from wherever the balance was actually acquired.
+       */
+      let basis = bp.avgEntryPrice;
+      let inferred = false;
+      if (!Number.isFinite(basis) || basis <= 0) {
+        basis = st.lastPrice || (await this.deps.broker.getLatestPrice(bp.symbol, bp.assetClass).catch(() => null)) || 0;
+        inferred = true;
+      }
+      if (!Number.isFinite(basis) || basis <= 0) {
+        this.log('warn', `Holding ${bp.qty} but no price is available, so it cannot be managed yet`, bp.symbol);
+        continue;
+      }
+
       const pos: OpenPosition = {
         symbol: bp.symbol,
         assetClass: bp.assetClass,
         side: bp.side,
         qty: bp.qty,
-        entryPrice: bp.avgEntryPrice,
+        entryPrice: basis,
         openedAt: this.now(),
         stopPrice: 0,
         takeProfitPrice: 0,
-        highWater: bp.avgEntryPrice,
-        entryReason: 'adopted from broker',
+        highWater: basis,
+        entryReason: inferred ? 'adopted from an existing balance' : 'adopted from broker',
         managed: false,
       };
-      this.applyExitLevels(pos, bp.avgEntryPrice);
+      this.applyExitLevels(pos, basis);
       this.positions[bp.symbol] = pos;
-      this.log('warn', `Adopted existing ${bp.side} ${bp.qty} position; exits now managed`, bp.symbol);
+      this.log(
+        'warn',
+        inferred
+          ? `Adopted an existing ${bp.qty} balance; exits are measured from the current price, not your original cost`
+          : `Adopted existing ${bp.side} ${bp.qty} position; exits now managed`,
+        bp.symbol
+      );
     }
     for (const sym of Object.keys(this.positions)) {
       if (!seen.has(sym) && !this.pendingOrders.has(sym)) {
@@ -595,12 +638,22 @@ export class TradingEngine {
   }
 
   private async bootstrapNews() {
+    if (this.deps.broker.capabilities?.news === false) {
+      this.log('info', `${this.deps.broker.label} has no news feed, so the news component scores neutral`);
+      return;
+    }
     try {
       const raw = await this.deps.broker.getNews(this.params.watchlist, 50);
       for (const n of raw.reverse()) this.onNews(n);
     } catch (e) {
       this.log('warn', `News load failed: ${errorMessage(e)}`);
     }
+  }
+
+  /** True when the venue can actually act on the side the signal chose. */
+  private venueAllows(side: Side): boolean {
+    if (side === 'short') return this.deps.broker.capabilities?.shorts !== false;
+    return true;
   }
 
   private recomputeNewsScore(st: SymbolState) {

@@ -13,34 +13,33 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BrandMark, LockIcon } from '../src/components/icons';
 import { useLicense } from '../src/context/LicenseContext';
 import { LICENSE_PUBLIC_KEY_HEX, PURCHASE_URL } from '../src/license/publicKey';
 import { colors } from '../src/theme/colors';
+import { fonts } from '../src/theme/fonts';
 import { radius, shared, spacing } from '../src/theme/layout';
 
 const FEATURES = [
-  'Live trade, quote and bar streams for stocks and crypto',
-  'Real-time news scored for sentiment and wired into entries',
+  'Live prices and real-time news across five venues',
+  'Stocks and crypto, or crypto alone',
   'Automated entries and exits inside limits you set',
-  'Stop loss, take profit, trailing stop and time-based exits',
+  'Stop loss, take profit, trailing stop and time exits',
   'Daily loss and trade-count circuit breakers',
 ];
 
 export default function ActivateScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { activate, lockReason } = useLicense();
+  const { activate, lockReason, busy, activationEnabled } = useLicense();
   const [key, setKey] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
 
   const noPublicKey = LICENSE_PUBLIC_KEY_HEX.length !== 64;
 
   const onActivate = async () => {
-    setBusy(true);
     setError(null);
     const res = await activate(key);
-    setBusy(false);
     if (res.ok) router.replace('/(tabs)/dashboard');
     else setError(res.error);
   };
@@ -52,29 +51,32 @@ export default function ActivateScreen() {
       keyboardVerticalOffset={insets.top}
     >
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.xxl, paddingBottom: insets.bottom + spacing.xxl }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + spacing.xxl },
+        ]}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.brandMark}>
-          <Text style={styles.brandGlyph}>▲</Text>
+        <View style={styles.header}>
+          <BrandMark size={72} />
+          <Text style={styles.brand}>TradeRunner</Text>
+          <Text style={styles.tagline}>
+            An automated day-trading desk for stocks and crypto, driven by live prices and real-time news.
+          </Text>
         </View>
-        <Text style={styles.brand}>TradeRunner</Text>
-        <Text style={styles.tagline}>
-          An automated day-trading desk for stocks and crypto, driven by live prices and real-time news.
-        </Text>
 
         <View style={styles.featureCard}>
           {FEATURES.map((f) => (
             <View key={f} style={styles.featureRow}>
-              <Text style={styles.featureDot}>•</Text>
+              <View style={styles.bullet} />
               <Text style={styles.featureText}>{f}</Text>
             </View>
           ))}
         </View>
 
         {lockReason ? (
-          <View style={[styles.banner, { borderColor: colors.warn, backgroundColor: colors.warnSoft }]}>
-            <Text style={[styles.bannerText, { color: colors.warn }]}>{lockReason}</Text>
+          <View style={[styles.banner, { borderColor: colors.down, backgroundColor: colors.downSoft }]}>
+            <Text style={[styles.bannerText, { color: colors.down }]}>{lockReason}</Text>
           </View>
         ) : null}
 
@@ -87,7 +89,10 @@ export default function ActivateScreen() {
           </View>
         ) : null}
 
-        <Text style={styles.inputLabel}>License key</Text>
+        <View style={styles.labelRow}>
+          <LockIcon size={15} color={colors.gold} />
+          <Text style={styles.inputLabel}>License key</Text>
+        </View>
         <TextInput
           value={key}
           onChangeText={(t) => {
@@ -113,12 +118,18 @@ export default function ActivateScreen() {
           style={({ pressed }) => [
             shared.button,
             styles.cta,
-            (busy || !key.trim()) && { opacity: 0.5 },
-            pressed && { opacity: 0.8 },
+            (busy || !key.trim()) && { opacity: 0.45 },
+            pressed && { opacity: 0.85 },
           ]}
         >
-          {busy ? <ActivityIndicator color={colors.onAccent} /> : <Text style={shared.buttonText}>Activate</Text>}
+          {busy ? <ActivityIndicator color={colors.onGold} /> : <Text style={shared.buttonText}>Activate</Text>}
         </Pressable>
+
+        {activationEnabled ? (
+          <Text style={styles.activationNote}>
+            Activation registers this device against your license. You can move it to another device from Settings.
+          </Text>
+        ) : null}
 
         {PURCHASE_URL ? (
           <Pressable
@@ -131,8 +142,8 @@ export default function ActivateScreen() {
         ) : null}
 
         <Text style={styles.legal}>
-          TradeRunner places real orders through your own brokerage account. Trading involves risk, including the loss
-          of your entire investment. Nothing here is financial advice. Start in paper mode.
+          TradeRunner places real orders through your own brokerage or exchange account. Trading involves risk,
+          including the loss of your entire investment. Nothing here is financial advice. Start in paper mode.
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -143,55 +154,55 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.xl,
   },
-  brandMark: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.lg,
-    backgroundColor: colors.accentSoft,
+  header: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  brandGlyph: {
-    color: colors.accent,
-    fontSize: 24,
-    fontWeight: '800',
+    marginBottom: spacing.xl,
   },
   brand: {
     color: colors.text,
-    fontSize: 30,
-    fontWeight: '800',
-    letterSpacing: -0.5,
+    fontSize: 32,
+    fontFamily: fonts.bold,
+    marginTop: spacing.md,
+    letterSpacing: 0.3,
   },
   tagline: {
     color: colors.textMuted,
-    fontSize: 15,
+    fontSize: 14.5,
     lineHeight: 22,
     marginTop: spacing.sm,
+    textAlign: 'center',
+    fontFamily: fonts.regular,
   },
   featureCard: {
-    marginTop: spacing.xl,
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.cardBorder,
+    borderColor: colors.cardLine,
     padding: spacing.lg,
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   featureRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    alignItems: 'flex-start',
+    gap: spacing.md,
   },
-  featureDot: {
-    color: colors.accent,
-    fontSize: 14,
-    lineHeight: 20,
+  bullet: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: colors.gold,
+    marginTop: 7,
+    shadowColor: colors.gold,
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 0 },
   },
   featureText: {
     flex: 1,
     color: colors.textMuted,
     fontSize: 14,
     lineHeight: 20,
+    fontFamily: fonts.regular,
   },
   banner: {
     marginTop: spacing.lg,
@@ -202,15 +213,21 @@ const styles = StyleSheet.create({
   bannerText: {
     fontSize: 13,
     lineHeight: 19,
+    fontFamily: fonts.regular,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
   },
   inputLabel: {
     color: colors.textFaint,
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: 1,
     textTransform: 'uppercase',
-    marginTop: spacing.xl,
-    marginBottom: spacing.sm,
   },
   keyInput: {
     minHeight: 84,
@@ -222,9 +239,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: spacing.sm,
     lineHeight: 18,
+    fontFamily: fonts.regular,
   },
   cta: {
     marginTop: spacing.lg,
+  },
+  activationNote: {
+    color: colors.textFaint,
+    fontSize: 11.5,
+    lineHeight: 17,
+    marginTop: spacing.md,
+    textAlign: 'center',
+    fontFamily: fonts.regular,
   },
   secondary: {
     marginTop: spacing.md,
@@ -234,5 +260,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 17,
     marginTop: spacing.xl,
+    fontFamily: fonts.regular,
   },
 });

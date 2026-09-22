@@ -2,6 +2,7 @@ import React from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { NewsItem } from '../engine/types';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 import { radius, spacing } from '../theme/layout';
 import { formatRelative } from './ActivityRow';
 
@@ -15,7 +16,7 @@ export function NewsRow({ item }: { item: NewsItem }) {
       }}
       disabled={!item.url}
       accessibilityRole={item.url ? 'link' : 'text'}
-      style={({ pressed }) => [styles.row, pressed && item.url ? { backgroundColor: colors.bgElevated } : null]}
+      style={({ pressed }) => [styles.row, pressed && item.url ? { backgroundColor: colors.cardRaised } : null]}
     >
       <View style={[styles.gauge, { backgroundColor: tone }]} />
       <View style={styles.body}>
@@ -47,7 +48,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
+    borderBottomColor: colors.cardLine,
   },
   gauge: {
     width: 3,
@@ -61,7 +62,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 14,
     lineHeight: 19,
-    fontWeight: '600',
+    fontFamily: fonts.semibold,
   },
   metaRow: {
     flexDirection: 'row',
@@ -72,7 +73,7 @@ const styles = StyleSheet.create({
   },
   score: {
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     fontVariant: ['tabular-nums'],
   },
   meta: {

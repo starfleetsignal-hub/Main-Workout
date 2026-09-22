@@ -1,14 +1,10 @@
 import assert from 'node:assert/strict';
-import { createRequire } from 'node:module';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-const require = createRequire(import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const { ema, rsi, atr, vwap, averageVolume, computeIndicators, sessionStartFor } = require(
-  path.join(root, 'dist-node/engine/indicators.js')
-);
+const { ema, rsi, atr, vwap, averageVolume, computeIndicators, sessionStartFor } = await import(path.join(root, 'dist-esm/engine/indicators.js'));
 
 function bars(closes, volume = 1000) {
   return closes.map((c, i) => ({

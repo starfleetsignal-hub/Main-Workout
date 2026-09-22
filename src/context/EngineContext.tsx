@@ -1,7 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
-import { AlpacaClient } from '../broker/alpaca/rest';
-import { AlpacaStreams } from '../broker/alpaca/stream';
+import { createConnection } from '../broker/registry';
 import { TradingEngine } from '../engine/engine';
 import { DEFAULT_PARAMETERS, normalizeParameters, type Parameters } from '../engine/parameters';
 import type { EngineSnapshot } from '../engine/types';
@@ -74,8 +73,7 @@ export function EngineProvider({ children }: { children: React.ReactNode }) {
     setSnapshot(EMPTY_SNAPSHOT);
 
     if (!credentials) return;
-    const broker = new AlpacaClient(credentials);
-    const streams = new AlpacaStreams(credentials);
+    const { broker, streams } = createConnection(credentials);
     const engine = new TradingEngine({ broker, streams }, parameters);
     engineRef.current = engine;
     unsubRef.current = engine.subscribe(setSnapshot);

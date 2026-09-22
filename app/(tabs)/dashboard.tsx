@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActivityRow } from '../../src/components/ActivityRow';
 import { Chip } from '../../src/components/Chip';
 import { StatTile } from '../../src/components/StatTile';
@@ -9,10 +10,12 @@ import { useCredentials } from '../../src/context/CredentialsContext';
 import { useEngine } from '../../src/context/EngineContext';
 import { fmtSigned } from '../../src/engine/engine';
 import { colors, pnlColor, statusColors } from '../../src/theme/colors';
+import { fonts } from '../../src/theme/fonts';
 import { radius, shared, spacing } from '../../src/theme/layout';
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { credentials, refreshAccount } = useCredentials();
   const { snapshot, parameters, start, stop, resume, flattenAll } = useEngine();
   const [busy, setBusy] = useState(false);
@@ -59,18 +62,19 @@ export default function DashboardScreen() {
 
   if (!credentials) {
     return (
-      <View style={[shared.screen, styles.empty]}>
-        <Text style={styles.emptyTitle}>Connect your broker</Text>
+      <View style={[shared.screen, styles.empty, { paddingTop: insets.top + 56 }]}>
+        <Text style={styles.emptyTitle}>Connect a venue</Text>
         <Text style={styles.emptyBody}>
-          TradeRunner trades through your own Alpaca account. Add your API keys to get live data and start the engine.
-          Paper mode is the default.
+          TradeRunner trades through an account you already own — Alpaca, Coinbase, Robinhood, Uphold or a Solana
+          wallet through Jupiter. Add your keys to get live data and start the engine. Paper mode is the default where
+          the venue offers one.
         </Text>
         <Pressable
-          onPress={() => router.push('/connect')}
+          onPress={() => router.push('/venues')}
           accessibilityRole="button"
-          style={({ pressed }) => [shared.button, { marginTop: spacing.xl }, pressed && { opacity: 0.8 }]}
+          style={({ pressed }) => [shared.button, { marginTop: spacing.xl }, pressed && { opacity: 0.85 }]}
         >
-          <Text style={shared.buttonText}>Connect Alpaca</Text>
+          <Text style={shared.buttonText}>Choose a venue</Text>
         </Pressable>
       </View>
     );
@@ -79,7 +83,7 @@ export default function DashboardScreen() {
   return (
     <ScrollView
       style={shared.screen}
-      contentContainerStyle={{ paddingBottom: spacing.xxl }}
+      contentContainerStyle={{ paddingTop: insets.top + 56, paddingBottom: spacing.xxl }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -214,7 +218,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     marginBottom: spacing.sm,
   },
   emptyBody: {
@@ -239,7 +243,7 @@ const styles = StyleSheet.create({
   statusText: {
     color: colors.textMuted,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: fonts.semibold,
     flex: 1,
   },
   streamChips: {
@@ -283,7 +287,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     color: colors.textFaint,
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: 1,
     textTransform: 'uppercase',
     marginTop: spacing.xl,
@@ -295,7 +299,7 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.lg,
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.cardBorder,
+    borderColor: colors.cardLine,
     overflow: 'hidden',
   },
   placeholder: {

@@ -61,6 +61,17 @@ export default function ConnectScreen() {
   const required = venue.credentialFields.filter((f) => !f.optional);
   const complete = required.every((f) => values[f.key]?.trim());
 
+  /**
+   * `router.back()` silently no-ops (with only a dev-mode console warning) when
+   * this screen was reached with no navigation history to pop — a direct page
+   * load or a refresh while sitting on /connect, which is common on web. Falling
+   * back to Settings means a successful save always visibly goes somewhere.
+   */
+  const leave = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)/settings');
+  };
+
   const onSave = async () => {
     setError(null);
     const creds: VenueCredentials = { venue: venue.id, ...values };
@@ -81,19 +92,19 @@ export default function ConnectScreen() {
         `Use the ${venue.name} watchlist?`,
         `Your current watchlist was set up for another venue. Replace it with symbols ${venue.name} can trade?`,
         [
-          { text: 'Keep mine', style: 'cancel', onPress: () => router.back() },
+          { text: 'Keep mine', style: 'cancel', onPress: leave },
           {
             text: 'Replace',
             onPress: () => {
               updateParameters({ watchlist: defaultWatchlistFor(venue.id) });
-              router.back();
+              leave();
             },
           },
         ]
       );
       return;
     }
-    router.back();
+    leave();
   };
 
   return (

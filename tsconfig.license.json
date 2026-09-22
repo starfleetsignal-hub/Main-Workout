@@ -1,0 +1,17 @@
+{
+  "//": "Builds the app-side license verifier as ES modules so the test suite can check it against Node-issued keys. @noble/ed25519 is ESM-only, which is why this cannot share the CommonJS engine build.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "outDir": "dist-esm",
+    "rootDir": "src/license",
+    "strict": true,
+    "skipLibCheck": true,
+    "declaration": false,
+    "sourceMap": false,
+    "types": ["node"]
+  },
+  "include": ["src/license/format.ts"]
+}

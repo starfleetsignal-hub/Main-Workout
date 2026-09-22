@@ -39,3 +39,11 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# secrets
+license-private.key
+.env
+licenses.jsonl
+licenses.csv
+dist-node/
+dist-esm/

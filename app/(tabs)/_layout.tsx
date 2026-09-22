@@ -1,12 +1,10 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { colors } from '../../src/theme/colors';
 
 function TabIcon({ symbol, focused }: { symbol: string; focused: boolean }) {
-  return (
-    <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.5 }}>{symbol}</Text>
-  );
+  return <Text style={{ fontSize: 18, opacity: focused ? 1 : 0.45 }}>{symbol}</Text>;
 }
 
 export default function TabsLayout() {
@@ -16,45 +14,37 @@ export default function TabsLayout() {
         headerStyle: { backgroundColor: colors.bg },
         headerTintColor: colors.text,
         headerShadowVisible: false,
-        tabBarStyle: { backgroundColor: colors.bgElevated, borderTopColor: colors.divider },
+        headerTitleStyle: { fontWeight: '700' },
+        sceneStyle: { backgroundColor: colors.bg },
+        tabBarStyle: {
+          backgroundColor: colors.bgElevated,
+          borderTopColor: colors.divider,
+          borderTopWidth: StyleSheet.hairlineWidth,
+        },
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textFaint,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
     >
       <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Muscles',
-          tabBarIcon: ({ focused }) => <TabIcon symbol="💪" focused={focused} />,
-        }}
+        name="dashboard"
+        options={{ title: 'Desk', tabBarIcon: ({ focused }) => <TabIcon symbol="📈" focused={focused} /> }}
       />
       <Tabs.Screen
-        name="search"
-        options={{
-          title: 'Search',
-          tabBarIcon: ({ focused }) => <TabIcon symbol="🔍" focused={focused} />,
-        }}
+        name="positions"
+        options={{ title: 'Positions', tabBarIcon: ({ focused }) => <TabIcon symbol="💼" focused={focused} /> }}
       />
       <Tabs.Screen
-        name="favorites"
-        options={{
-          title: 'Favorites',
-          tabBarIcon: ({ focused }) => <TabIcon symbol="⭐" focused={focused} />,
-        }}
+        name="news"
+        options={{ title: 'News', tabBarIcon: ({ focused }) => <TabIcon symbol="📰" focused={focused} /> }}
       />
       <Tabs.Screen
-        name="builder"
-        options={{
-          title: 'Builder',
-          tabBarIcon: ({ focused }) => <TabIcon symbol="🛠️" focused={focused} />,
-        }}
+        name="parameters"
+        options={{ title: 'Rules', tabBarIcon: ({ focused }) => <TabIcon symbol="🎚️" focused={focused} /> }}
       />
       <Tabs.Screen
-        name="about"
-        options={{
-          title: 'About',
-          tabBarIcon: ({ focused }) => <TabIcon symbol="ℹ️" focused={focused} />,
-        }}
+        name="settings"
+        options={{ title: 'Settings', tabBarIcon: ({ focused }) => <TabIcon symbol="⚙️" focused={focused} /> }}
       />
     </Tabs>
   );

@@ -1,0 +1,17 @@
+{
+  "//": "Compiles the platform-independent engine + broker core to CommonJS so the headless runner and the test suite can run it under plain Node. The app itself is bundled by Metro and does not use this.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "Node18",
+    "outDir": "dist-node",
+    "rootDir": "src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": false,
+    "sourceMap": false,
+    "types": ["node"]
+  },
+  "include": ["src/engine/**/*.ts", "src/broker/**/*.ts"]
+}

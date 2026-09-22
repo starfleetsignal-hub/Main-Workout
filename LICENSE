@@ -1,21 +1,67 @@
-The MIT License (MIT)
+TradeRunner — Proprietary Software License
+Copyright (c) 2026 <YOUR NAME OR COMPANY>. All rights reserved.
 
-Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)
+Replace <YOUR NAME OR COMPANY> above with the legal name of the copyright
+holder before distributing this software.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. Ownership
+   This software, including its source code, assets and documentation (the
+   "Software"), is the property of the copyright holder and is protected by
+   copyright law. It is licensed, not sold.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+2. Grant of license
+   Subject to payment of the applicable fee and to the terms below, the
+   copyright holder grants each purchaser a non-exclusive, non-transferable,
+   revocable license to install and use one copy of the Software on devices
+   the purchaser owns or controls, for the purchaser's own use.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+3. Restrictions
+   Except as permitted by law that cannot be excluded by agreement, you may
+   not:
+   (a) copy, publish, distribute, sublicense, sell, rent, lease or lend the
+       Software or any part of it;
+   (b) share, publish or transfer a license key, or use a license key that was
+       not issued to you;
+   (c) modify, adapt, translate or create derivative works of the Software;
+   (d) reverse engineer, decompile or disassemble the Software, or circumvent
+       or attempt to circumvent its licensing or activation mechanisms;
+   (e) remove or obscure any copyright, trademark or other proprietary notice.
+
+4. License keys
+   A license key identifies the person or organisation it was issued to. Keys
+   may carry an expiry date. The copyright holder may revoke a license, and
+   decline to honour a key, where these terms have been breached.
+
+5. No warranty
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+6. Trading risk and limitation of liability
+   The Software places orders in the user's own brokerage account and can lose
+   money. It is not financial, investment, tax or legal advice, and no outcome
+   or profit is promised. The user is solely responsible for every order placed
+   through their account, for the parameters they configure, and for compliance
+   with the rules of their broker and jurisdiction.
+
+   TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL THE COPYRIGHT
+   HOLDER BE LIABLE FOR ANY TRADING LOSS, LOST PROFITS, OR ANY INDIRECT,
+   INCIDENTAL, SPECIAL, CONSEQUENTIAL OR EXEMPLARY DAMAGES ARISING FROM OR IN
+   CONNECTION WITH THE SOFTWARE OR ITS USE, WHETHER IN CONTRACT, TORT OR
+   OTHERWISE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. THE TOTAL
+   AGGREGATE LIABILITY OF THE COPYRIGHT HOLDER SHALL NOT EXCEED THE AMOUNT
+   ACTUALLY PAID FOR THE LICENSE.
+
+   Nothing in this license excludes or limits liability that cannot lawfully be
+   excluded or limited.
+
+7. Termination
+   This license terminates automatically if you breach these terms. On
+   termination you must stop using the Software and delete all copies.
+
+8. Third-party components
+   The Software includes open-source components licensed by their respective
+   authors under their own terms, which continue to apply to those components.
+
+This document is a starting point, not legal advice. Have a lawyer review it
+before you sell.

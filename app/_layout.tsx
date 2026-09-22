@@ -1,49 +1,66 @@
-import { Poppins_600SemiBold, Poppins_700Bold, Poppins_800ExtraBold, useFonts } from '@expo-google-fonts/poppins';
 import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect } from 'react';
-import { FavoritesProvider } from '../src/context/FavoritesContext';
-import { RoutineProvider } from '../src/context/RoutineContext';
+import React from 'react';
+import { ActivityIndicator, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { CredentialsProvider } from '../src/context/CredentialsContext';
+import { EngineProvider } from '../src/context/EngineContext';
+import { LicenseProvider, useLicense } from '../src/context/LicenseContext';
 import { colors } from '../src/theme/colors';
 
-SplashScreen.preventAutoHideAsync().catch(() => {});
+/**
+ * The license gate lives here, at the root of the navigation tree.
+ *
+ * `Stack.Protected` unmounts every screen inside it while `guard` is false,
+ * so an unlicensed copy cannot reach the trading UI by deep link, by
+ * `router.push`, or by restoring a saved navigation state — the routes do
+ * not exist. When a license lapses mid-session the guard flips and the user
+ * is dropped back on the activation screen automatically.
+ */
+function RootNavigator() {
+  const { isUnlocked, loaded } = useLicense();
 
-export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
-    Poppins_600SemiBold,
-    Poppins_700Bold,
-    Poppins_800ExtraBold,
-  });
-
-  useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync().catch(() => {});
-    }
-  }, [fontsLoaded]);
-
-  if (!fontsLoaded) {
-    return null;
+  if (!loaded) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={colors.accent} />
+      </View>
+    );
   }
 
   return (
-    <FavoritesProvider>
-      <RoutineProvider>
-        <StatusBar style="dark" />
-        <Stack
-          screenOptions={{
-            headerStyle: { backgroundColor: colors.bg },
-            headerTintColor: colors.text,
-            headerShadowVisible: false,
-            contentStyle: { backgroundColor: colors.bg },
-          }}
-        >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="muscle/[id]" options={{ title: '', headerBackTitle: 'Back' }} />
-          <Stack.Screen name="routine/[id]" options={{ title: 'Routine' }} />
-          <Stack.Screen name="routine/[id]/add" options={{ title: 'Add Exercises', presentation: 'modal' }} />
-        </Stack>
-      </RoutineProvider>
-    </FavoritesProvider>
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.bg },
+        headerTintColor: colors.text,
+        headerShadowVisible: false,
+        contentStyle: { backgroundColor: colors.bg },
+      }}
+    >
+      <Stack.Protected guard={!isUnlocked}>
+        <Stack.Screen name="activate" options={{ headerShown: false }} />
+      </Stack.Protected>
+
+      <Stack.Protected guard={isUnlocked}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="connect" options={{ title: 'Connect broker', presentation: 'modal' }} />
+        <Stack.Screen name="symbol/[id]" options={{ title: '' }} />
+      </Stack.Protected>
+    </Stack>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <SafeAreaProvider>
+      <LicenseProvider>
+        <CredentialsProvider>
+          <EngineProvider>
+            <StatusBar style="light" />
+            <RootNavigator />
+          </EngineProvider>
+        </CredentialsProvider>
+      </LicenseProvider>
+    </SafeAreaProvider>
   );
 }

@@ -1,42 +1,47 @@
 {
   "expo": {
-    "name": "MuscleGuide",
-    "slug": "muscleguide",
+    "name": "TradeRunner",
+    "slug": "traderunner",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "muscleguide",
-    "userInterfaceStyle": "automatic",
+    "scheme": "traderunner",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
-    "description": "Evidence-based strength and stretching guides for every major muscle in the body.",
+    "description": "Automated day trading for stocks and crypto, driven by real-time prices and news, inside limits you set.",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.muscleguide.app"
+      "bundleIdentifier": "com.traderunner.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["fetch"]
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0F172A",
+        "backgroundColor": "#0B0E14",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.muscleguide.app"
+      "package": "com.traderunner.app"
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
-      "output": "static"
+      "output": "single"
     },
     "plugins": [
       "expo-router",
+      "expo-secure-store",
       [
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",
-          "imageWidth": 200,
+          "imageWidth": 180,
           "resizeMode": "contain",
-          "backgroundColor": "#0F172A"
+          "backgroundColor": "#0B0E14"
         }
       ]
     ],

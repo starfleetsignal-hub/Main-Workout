@@ -4,6 +4,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chip, ToggleChip } from '../../src/components/Chip';
 import { NumberSetting, SettingGroup, SwitchSetting } from '../../src/components/ParameterControls';
+import { ScreenTitle } from '../../src/components/ScreenTitle';
 import { useEngine } from '../../src/context/EngineContext';
 import { PARAMETER_BOUNDS, PARAMETER_PRESETS } from '../../src/engine/parameters';
 import { colors } from '../../src/theme/colors';
@@ -47,8 +48,9 @@ export default function ParametersScreen() {
   if (!isFocused) return null;
 
   return (
-    <ScrollView style={shared.screen} contentContainerStyle={{ padding: spacing.lg, paddingTop: insets.top + 56, paddingBottom: spacing.xxl }}>
-      <Text style={styles.intro}>
+    <ScrollView style={shared.screen} contentContainerStyle={{ padding: spacing.lg, paddingTop: insets.top + spacing.lg, paddingBottom: spacing.xxl }}>
+      <ScreenTitle>Rules</ScreenTitle>
+      <Text style={[styles.intro, { marginTop: spacing.md }]}>
         These rules bound everything the engine may do. Changes apply immediately, including to positions already open.
       </Text>
 

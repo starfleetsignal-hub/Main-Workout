@@ -9,11 +9,13 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerStyle: { backgroundColor: 'transparent' },
-        headerTransparent: true,
-        headerTintColor: colors.text,
-        headerShadowVisible: false,
-        headerTitleStyle: { fontFamily: fonts.bold, fontSize: 19 },
+        // Every tab's header stays mounted at once (React Navigation only
+        // tells them apart by z-index, not display), so a shared transparent
+        // header showed every tab's title stacked in the same corner. Each
+        // screen renders its own title in its own content instead — see
+        // ScreenTitle — which disappears along with the rest of an unfocused
+        // screen's output.
+        headerShown: false,
         sceneStyle: { backgroundColor: 'transparent' },
         tabBarStyle: {
           // A glass shelf over the starfield rather than a solid bar.

@@ -6,6 +6,7 @@ import { formatRelative } from '../../src/components/ActivityRow';
 import { Chip } from '../../src/components/Chip';
 import { EquityCurve } from '../../src/components/EquityCurve';
 import { PositionCard } from '../../src/components/PositionCard';
+import { ScreenTitle } from '../../src/components/ScreenTitle';
 import { StatTile } from '../../src/components/StatTile';
 import { useEngine } from '../../src/context/EngineContext';
 import { computePerformanceStats } from '../../src/engine/analytics';
@@ -43,8 +44,9 @@ export default function PositionsScreen() {
   if (!isFocused) return null;
 
   return (
-    <ScrollView style={shared.screen} contentContainerStyle={{ padding: spacing.lg, paddingTop: insets.top + 56, paddingBottom: spacing.xxl }}>
-      <View style={styles.tiles}>
+    <ScrollView style={shared.screen} contentContainerStyle={{ padding: spacing.lg, paddingTop: insets.top + spacing.lg, paddingBottom: spacing.xxl }}>
+      <ScreenTitle>Positions</ScreenTitle>
+      <View style={[styles.tiles, { marginTop: spacing.lg }]}>
         <StatTile label="Closed" value={String(stats.closedTrades)} sub="this session" />
         <StatTile label="Win rate" value={stats.closedTrades ? `${stats.winRate.toFixed(0)}%` : '—'} />
         <StatTile label="Net" value={stats.closedTrades ? fmtSigned(stats.netPnl) : '—'} valueColor={pnlColor(stats.netPnl)} />

@@ -4,6 +4,7 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NewsRow } from '../../src/components/NewsRow';
 import { ToggleChip } from '../../src/components/Chip';
+import { ScreenTitle } from '../../src/components/ScreenTitle';
 import { useEngine } from '../../src/context/EngineContext';
 import { colors } from '../../src/theme/colors';
 import { fonts } from '../../src/theme/fonts';
@@ -40,7 +41,10 @@ export default function NewsScreen() {
 
   return (
     <View style={shared.screen}>
-      <View style={[styles.filters, { paddingTop: insets.top + 56 }]}>
+      <View style={{ paddingHorizontal: spacing.lg, paddingTop: insets.top + spacing.lg }}>
+        <ScreenTitle>News</ScreenTitle>
+      </View>
+      <View style={[styles.filters, { paddingTop: spacing.sm }]}>
         {(['watchlist', 'all', 'positive', 'negative'] as Filter[]).map((f) => (
           <ToggleChip key={f} label={label(f)} active={filter === f} onPress={() => setFilter(f)} />
         ))}

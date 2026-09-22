@@ -4,6 +4,7 @@ import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActivityRow } from '../../src/components/ActivityRow';
 import { Chip } from '../../src/components/Chip';
+import { ScreenTitle } from '../../src/components/ScreenTitle';
 import { StatTile } from '../../src/components/StatTile';
 import { SymbolRow } from '../../src/components/SymbolRow';
 import { useCredentials } from '../../src/context/CredentialsContext';
@@ -69,7 +70,7 @@ export default function DashboardScreen() {
 
   if (!credentials) {
     return (
-      <View style={[shared.screen, styles.empty, { paddingTop: insets.top + 56 }]}>
+      <View style={[shared.screen, styles.empty, { paddingTop: insets.top + spacing.lg }]}>
         <Text style={styles.emptyTitle}>Connect a venue</Text>
         <Text style={styles.emptyBody}>
           TradeRunner trades through an account you already own — Alpaca, Coinbase, Robinhood, Uphold or a Solana
@@ -90,7 +91,7 @@ export default function DashboardScreen() {
   return (
     <ScrollView
       style={shared.screen}
-      contentContainerStyle={{ paddingTop: insets.top + 56, paddingBottom: spacing.xxl }}
+      contentContainerStyle={{ paddingTop: insets.top + spacing.lg, paddingBottom: spacing.xxl }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -103,6 +104,9 @@ export default function DashboardScreen() {
         />
       }
     >
+      <View style={{ paddingHorizontal: spacing.lg }}>
+        <ScreenTitle>Desk</ScreenTitle>
+      </View>
       <View style={styles.statusBar}>
         <View style={shared.row}>
           <View style={[styles.statusDot, { backgroundColor: statusColors[snapshot.status] ?? colors.textFaint }]} />

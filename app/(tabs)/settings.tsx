@@ -8,6 +8,7 @@ import { useCredentials } from '../../src/context/CredentialsContext';
 import { useEngine } from '../../src/context/EngineContext';
 import { useLicense } from '../../src/context/LicenseContext';
 import { useNotifications } from '../../src/context/NotificationsContext';
+import { ScreenTitle } from '../../src/components/ScreenTitle';
 import { clearCrashLog, getCrashLog, type CrashEntry } from '../../src/errors/crashLog';
 import { PRIVACY_POLICY_URL, TERMS_URL } from '../../src/license/publicKey';
 import { colors } from '../../src/theme/colors';
@@ -146,8 +147,9 @@ export default function SettingsScreen() {
   return (
     <ScrollView
       style={shared.screen}
-      contentContainerStyle={{ padding: spacing.lg, paddingTop: insets.top + 56, paddingBottom: 120 }}
+      contentContainerStyle={{ padding: spacing.lg, paddingTop: insets.top + spacing.lg, paddingBottom: 120 }}
     >
+      <ScreenTitle>Settings</ScreenTitle>
       {remoteFlatten ? (
         <View style={styles.flattenNotice}>
           <ShieldIcon size={16} color={colors.down} />

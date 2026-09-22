@@ -1,6 +1,6 @@
 import { useIsFocused, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActivityRow } from '../../src/components/ActivityRow';
 import { Chip } from '../../src/components/Chip';
@@ -13,6 +13,7 @@ import { fmtSigned } from '../../src/engine/engine';
 import { colors, pnlColor, statusColors } from '../../src/theme/colors';
 import { fonts } from '../../src/theme/fonts';
 import { radius, shared, spacing } from '../../src/theme/layout';
+import { showAlert } from '../../src/utils/alert';
 
 export default function DashboardScreen() {
   const isFocused = useIsFocused();
@@ -56,7 +57,7 @@ export default function DashboardScreen() {
 
   const onFlatten = useCallback(() => {
     if (openCount === 0) return;
-    Alert.alert('Close all positions?', `This sends market orders to close ${openCount} open position(s) right now.`, [
+    showAlert('Close all positions?', `This sends market orders to close ${openCount} open position(s) right now.`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Close all', style: 'destructive', onPress: () => void flattenAll() },
     ]);

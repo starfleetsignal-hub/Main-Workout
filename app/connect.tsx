@@ -2,7 +2,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Linking,
   Platform,
@@ -23,6 +22,7 @@ import { useEngine } from '../src/context/EngineContext';
 import { colors } from '../src/theme/colors';
 import { fonts } from '../src/theme/fonts';
 import { radius, shared, spacing } from '../src/theme/layout';
+import { showAlert } from '../src/utils/alert';
 
 /**
  * One connect screen for every venue. The fields come from the venue
@@ -88,7 +88,7 @@ export default function ConnectScreen() {
     // offer to replace it rather than starting in a broken state.
     const stale = parameters.watchlist.filter((s) => !defaultWatchlistFor(venue.id).includes(s));
     if (credentials?.venue !== venue.id && stale.length > 0) {
-      Alert.alert(
+      showAlert(
         `Use the ${venue.name} watchlist?`,
         `Your current watchlist was set up for another venue. Replace it with symbols ${venue.name} can trade?`,
         [

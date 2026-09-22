@@ -1,6 +1,6 @@
 import { useIsFocused } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chip, ToggleChip } from '../../src/components/Chip';
 import { NumberSetting, SettingGroup, SwitchSetting } from '../../src/components/ParameterControls';
@@ -10,6 +10,7 @@ import { PARAMETER_BOUNDS, PARAMETER_PRESETS } from '../../src/engine/parameters
 import { colors } from '../../src/theme/colors';
 import { fonts } from '../../src/theme/fonts';
 import { radius, shared, spacing } from '../../src/theme/layout';
+import { showAlert } from '../../src/utils/alert';
 
 export default function ParametersScreen() {
   const isFocused = useIsFocused();
@@ -23,7 +24,7 @@ export default function ParametersScreen() {
     const raw = symbolInput.trim().toUpperCase();
     if (!raw) return;
     if (!/^[A-Z0-9.\-]{1,12}(\/[A-Z]{3,5})?$/.test(raw)) {
-      Alert.alert('Not a valid symbol', 'Use a ticker like AAPL, or a crypto pair like BTC/USD.');
+      showAlert('Not a valid symbol', 'Use a ticker like AAPL, or a crypto pair like BTC/USD.');
       return;
     }
     if (p.watchlist.includes(raw)) {
@@ -36,7 +37,7 @@ export default function ParametersScreen() {
 
   const removeSymbol = (s: string) => {
     if (snapshot.positions[s]) {
-      Alert.alert('Position open', `Close the ${s} position before removing it from the watchlist.`);
+      showAlert('Position open', `Close the ${s} position before removing it from the watchlist.`);
       return;
     }
     updateParameters({ watchlist: p.watchlist.filter((x) => x !== s) });
@@ -60,7 +61,7 @@ export default function ParametersScreen() {
             <Pressable
               key={preset.id}
               onPress={() =>
-                Alert.alert(preset.name, preset.description, [
+                showAlert(preset.name, preset.description, [
                   { text: 'Cancel', style: 'cancel' },
                   { text: 'Apply', onPress: () => updateParameters(preset.values) },
                 ])
@@ -369,7 +370,7 @@ export default function ParametersScreen() {
 
       <Pressable
         onPress={() =>
-          Alert.alert('Reset to defaults?', 'Every rule returns to its shipped value.', [
+          showAlert('Reset to defaults?', 'Every rule returns to its shipped value.', [
             { text: 'Cancel', style: 'cancel' },
             { text: 'Reset', style: 'destructive', onPress: resetParameters },
           ])

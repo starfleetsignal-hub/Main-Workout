@@ -1,6 +1,6 @@
 import { useIsFocused } from 'expo-router';
 import React, { useMemo } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatRelative } from '../../src/components/ActivityRow';
 import { Chip } from '../../src/components/Chip';
@@ -15,6 +15,7 @@ import type { TradeRecord } from '../../src/engine/types';
 import { colors, pnlColor } from '../../src/theme/colors';
 import { fonts } from '../../src/theme/fonts';
 import { radius, shared, spacing } from '../../src/theme/layout';
+import { showAlert } from '../../src/utils/alert';
 
 export default function PositionsScreen() {
   const isFocused = useIsFocused();
@@ -30,7 +31,7 @@ export default function PositionsScreen() {
   );
 
   const onClose = (symbol: string) => {
-    Alert.alert('Close position?', `Send a market order to close ${symbol} now.`, [
+    showAlert('Close position?', `Send a market order to close ${symbol} now.`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Close', style: 'destructive', onPress: () => void closePosition(symbol) },
     ]);

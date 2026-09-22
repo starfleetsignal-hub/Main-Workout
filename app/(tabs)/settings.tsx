@@ -1,6 +1,6 @@
 import { useIsFocused, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chip } from '../../src/components/Chip';
 import { ShieldIcon, SignalIcon } from '../../src/components/icons';
@@ -14,6 +14,7 @@ import { PRIVACY_POLICY_URL, TERMS_URL } from '../../src/license/publicKey';
 import { colors } from '../../src/theme/colors';
 import { fonts } from '../../src/theme/fonts';
 import { radius, shared, spacing } from '../../src/theme/layout';
+import { showAlert } from '../../src/utils/alert';
 
 export default function SettingsScreen() {
   const isFocused = useIsFocused();
@@ -44,7 +45,7 @@ export default function SettingsScreen() {
   const running = snapshot.status === 'running' || snapshot.status === 'starting';
 
   const onClearCrashLog = () => {
-    Alert.alert('Clear the error log?', 'This only removes the on-device record; it does not affect trading.', [
+    showAlert('Clear the error log?', 'This only removes the on-device record; it does not affect trading.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Clear',
@@ -60,7 +61,7 @@ export default function SettingsScreen() {
   const onToggleAlerts = async (next: boolean) => {
     const result = await setAlertsEnabled(next);
     if (next && !result) {
-      Alert.alert(
+      showAlert(
         'Notifications are off',
         'TradeRunner is not allowed to send notifications. Turn them on for this app in your device Settings, then try again.'
       );
@@ -68,7 +69,7 @@ export default function SettingsScreen() {
   };
 
   const onDeactivate = () => {
-    Alert.alert(
+    showAlert(
       'Deactivate this device?',
       activationEnabled
         ? 'This frees the seat so you can use your license on another device. The app locks here until you enter a key again.'
@@ -88,7 +89,7 @@ export default function SettingsScreen() {
   };
 
   const onDisconnect = () => {
-    Alert.alert('Remove venue keys?', 'Your API keys are deleted from this device. Open positions are untouched.', [
+    showAlert('Remove venue keys?', 'Your API keys are deleted from this device. Open positions are untouched.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove',
@@ -105,11 +106,11 @@ export default function SettingsScreen() {
     if (!credentials || !venue?.capabilities.paper) return;
     const next = credentials.mode === 'live' ? (venue.id === 'uphold' ? 'sandbox' : 'paper') : 'live';
     if (running) {
-      Alert.alert('Stop the engine first', 'Switching between paper and live requires the engine to be stopped.');
+      showAlert('Stop the engine first', 'Switching between paper and live requires the engine to be stopped.');
       return;
     }
     if (next === 'live') {
-      Alert.alert(
+      showAlert(
         'Switch to live trading?',
         `The engine will place orders with real money in your ${venue.name} account. Make sure you have run it in paper mode first.`,
         [

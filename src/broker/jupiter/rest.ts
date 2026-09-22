@@ -3,7 +3,11 @@ import type { Broker, BrokerPosition, OrderRequest, OrderResult, RawNews } from 
 import { alwaysOpenClock, type VenueCapabilities, type VenueDescriptor } from '../venues';
 import { parseSolanaKey, signSerializedTransaction, type SolanaWallet } from './solana';
 
-const QUOTE_API = 'https://quote-api.jup.ag/v6';
+// quote-api.jup.ag/v6 (what this adapter originally targeted) has been
+// retired — it no longer resolves at all. lite-api.jup.ag/swap/v1 is
+// Jupiter's current free-tier endpoint, confirmed live and returning real
+// quotes; the relative paths below (/quote, /swap) are unchanged.
+const QUOTE_API = 'https://lite-api.jup.ag/swap/v1';
 const DEFAULT_RPC = 'https://api.mainnet-beta.solana.com';
 
 export interface JupiterCredentials {

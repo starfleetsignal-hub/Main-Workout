@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useIsFocused, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +14,7 @@ import { fonts } from '../../src/theme/fonts';
 import { radius, shared, spacing } from '../../src/theme/layout';
 
 export default function DashboardScreen() {
+  const isFocused = useIsFocused();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { credentials, refreshAccount } = useCredentials();
@@ -59,6 +60,12 @@ export default function DashboardScreen() {
       { text: 'Close all', style: 'destructive', onPress: () => void flattenAll() },
     ]);
   }, [openCount, flattenAll]);
+
+  // React Navigation keeps every tab screen mounted and stacks them with
+  // absolute positioning + transparent backgrounds (so the starfield shows
+  // through); without this, an unfocused tab's content stays visible behind
+  // the focused one wherever the focused tab doesn't fully opaque-cover it.
+  if (!isFocused) return null;
 
   if (!credentials) {
     return (

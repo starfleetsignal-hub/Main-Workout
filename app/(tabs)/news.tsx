@@ -1,3 +1,4 @@
+import { useIsFocused } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +12,7 @@ import { shared, spacing } from '../../src/theme/layout';
 type Filter = 'all' | 'watchlist' | 'positive' | 'negative';
 
 export default function NewsScreen() {
+  const isFocused = useIsFocused();
   const insets = useSafeAreaInsets();
   const { snapshot, parameters } = useEngine();
   const [filter, setFilter] = useState<Filter>('watchlist');
@@ -30,6 +32,11 @@ export default function NewsScreen() {
       }
     });
   }, [snapshot.news, parameters.watchlist, filter]);
+
+  // See the matching comment in dashboard.tsx: an unfocused tab must render
+  // nothing, since a transparent background alone doesn't hide it behind the
+  // focused one.
+  if (!isFocused) return null;
 
   return (
     <View style={shared.screen}>

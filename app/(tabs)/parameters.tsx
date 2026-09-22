@@ -1,3 +1,4 @@
+import { useIsFocused } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,6 +11,7 @@ import { fonts } from '../../src/theme/fonts';
 import { radius, shared, spacing } from '../../src/theme/layout';
 
 export default function ParametersScreen() {
+  const isFocused = useIsFocused();
   const insets = useSafeAreaInsets();
   const { parameters: p, updateParameters, resetParameters, snapshot } = useEngine();
   const [symbolInput, setSymbolInput] = useState('');
@@ -38,6 +40,11 @@ export default function ParametersScreen() {
     }
     updateParameters({ watchlist: p.watchlist.filter((x) => x !== s) });
   };
+
+  // See the matching comment in dashboard.tsx: an unfocused tab must render
+  // nothing, since a transparent background alone doesn't hide it behind the
+  // focused one.
+  if (!isFocused) return null;
 
   return (
     <ScrollView style={shared.screen} contentContainerStyle={{ padding: spacing.lg, paddingTop: insets.top + 56, paddingBottom: spacing.xxl }}>

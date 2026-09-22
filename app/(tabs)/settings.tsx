@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useIsFocused, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +15,7 @@ import { fonts } from '../../src/theme/fonts';
 import { radius, shared, spacing } from '../../src/theme/layout';
 
 export default function SettingsScreen() {
+  const isFocused = useIsFocused();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const {
@@ -136,6 +137,11 @@ export default function SettingsScreen() {
         return { text: 'Not checked in', tone: 'neutral' as const };
     }
   })();
+
+  // See the matching comment in dashboard.tsx: an unfocused tab must render
+  // nothing, since a transparent background alone doesn't hide it behind the
+  // focused one.
+  if (!isFocused) return null;
 
   return (
     <ScrollView

@@ -170,6 +170,31 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
       minVolumeMultiple: 1.2,
     },
   },
+  {
+    id: 'crypto-starter',
+    name: 'Crypto starter',
+    description:
+      'For a small wallet on a venue with no news feed (Coinbase, Robinhood, Uphold, Jupiter): tiny size, one position at a time, a high signal bar, and news confirmation off — that setting alone would block every entry forever on a venue with nothing to confirm against.',
+    values: {
+      watchlist: ['SOL/USDC'],
+      tradeStocks: false,
+      tradeCrypto: true,
+      riskPerTradePct: 0.15,
+      maxPositionPct: 8,
+      maxOpenPositions: 1,
+      maxAssetClassExposurePct: 40,
+      maxDailyLossPct: 1,
+      maxDailyTrades: 5,
+      stopLossPct: 0.7,
+      takeProfitPct: 1.4,
+      trailingStopPct: 0.5,
+      maxHoldMinutes: 60,
+      cooldownMinutes: 30,
+      maxSlippagePct: 0.3,
+      minSignalScore: 75,
+      requireNewsConfirmation: false,
+    },
+  },
 ];
 
 interface Bound {

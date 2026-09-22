@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const { computeEngineAlerts } = await import(path.join(root, 'dist-esm/notifications/engineAlertRules.js'));
+const { computeEngineAlerts } = await import(pathToFileURL(path.join(root, 'dist-esm/notifications/engineAlertRules.js')).href);
 
 function snap(overrides = {}) {
   return {

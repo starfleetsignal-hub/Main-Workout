@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { createPrivateKey, createPublicKey, generateKeyPairSync, verify } from 'node:crypto';
 import path from 'node:path';
 import test from 'node:test';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const {
@@ -18,7 +18,7 @@ const {
   bytesToBase64,
   base64ToBytes,
   bytesToBase64Url,
-} = await import(path.join(root, 'dist-esm/broker/signing.js'));
+} = await import(pathToFileURL(path.join(root, 'dist-esm/broker/signing.js')).href);
 
 test('base64 round-trips against Node for random bytes', () => {
   for (let i = 0; i < 60; i++) {

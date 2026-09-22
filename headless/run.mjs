@@ -32,11 +32,19 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadPublicKeyHex, parseArgs, verifyLicense } from '../tools/license/lib.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
+
+/**
+ * A bare Windows path (e.g. "C:\...") passed to import() throws
+ * ERR_UNSUPPORTED_ESM_URL_SCHEME — Node's ESM loader treats the drive
+ * letter as a URL scheme. file:// URLs work on every OS, so build one
+ * instead of relying on the loader to accept a raw filesystem path.
+ */
+const importPath = (...segments) => import(pathToFileURL(path.join(...segments)).href);
 
 const args = parseArgs(process.argv.slice(2));
 
@@ -74,9 +82,9 @@ if (!licenseCheck.ok) {
 console.log(`License OK — ${licenseCheck.payload.sub} (${licenseCheck.payload.plan})`);
 
 // --- broker credentials ------------------------------------------------------
-const { createConnection } = await import(path.join(distDir, 'broker/registry.js'));
-const { TradingEngine } = await import(path.join(distDir, 'engine/engine.js'));
-const { normalizeParameters, DEFAULT_PARAMETERS } = await import(path.join(distDir, 'engine/parameters.js'));
+const { createConnection } = await importPath(distDir, 'broker/registry.js');
+const { TradingEngine } = await importPath(distDir, 'engine/engine.js');
+const { normalizeParameters, DEFAULT_PARAMETERS } = await importPath(distDir, 'engine/parameters.js');
 
 let creds;
 let mode = 'paper';
@@ -144,7 +152,7 @@ if (controlPort) {
     process.exit(1);
   }
   const controlHost = String(process.env.CONTROL_HOST ?? args['control-host'] ?? '127.0.0.1');
-  const { startControlServer } = await import(path.join(root, 'headless/control-server.mjs'));
+  const { startControlServer } = await importPath(root, 'headless/control-server.mjs');
   await startControlServer({ engine, token: controlToken, port: controlPort, host: controlHost });
   console.log(`Control server on ${controlHost}:${controlPort} — POST /flatten, POST /stop?flatten=1, GET /status`);
   if (controlHost !== '127.0.0.1' && controlHost !== 'localhost') {

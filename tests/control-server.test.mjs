@@ -6,10 +6,10 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test, { after, before } from 'node:test';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const { startControlServer } = await import(path.join(root, 'headless/control-server.mjs'));
+const { startControlServer } = await import(pathToFileURL(path.join(root, 'headless/control-server.mjs')).href);
 
 const TOKEN = 'test-control-token';
 let server;

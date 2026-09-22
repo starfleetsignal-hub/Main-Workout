@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const { runBacktest } = await import(path.join(root, 'backtest/harness.mjs'));
+const { runBacktest } = await import(pathToFileURL(path.join(root, 'backtest/harness.mjs')).href);
 
 const MINUTE = 60_000;
 const T0 = Date.UTC(2026, 0, 5, 15, 0, 0); // a Monday, mid-session
@@ -159,7 +159,7 @@ test('runBacktest rejects an empty bar set', async () => {
 });
 
 test('the returned stats match computePerformanceStats over the returned snapshot', async () => {
-  const { computePerformanceStats } = await import(path.join(root, 'dist-esm/engine/analytics.js'));
+  const { computePerformanceStats } = await import(pathToFileURL(path.join(root, 'dist-esm/engine/analytics.js')).href);
   const bars = trendBars(400);
   const result = await runBacktest({
     barsBySymbol: { AAPL: bars },

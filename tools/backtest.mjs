@@ -19,12 +19,20 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from './license/lib.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
 const distDir = path.join(root, 'dist-esm');
+
+/**
+ * A bare Windows path (e.g. "C:\...") passed to import() throws
+ * ERR_UNSUPPORTED_ESM_URL_SCHEME — Node's ESM loader treats the drive
+ * letter as a URL scheme. file:// URLs work on every OS, so build one
+ * instead of relying on the loader to accept a raw filesystem path.
+ */
+const importPath = (...segments) => import(pathToFileURL(path.join(...segments)).href);
 
 const args = parseArgs(process.argv.slice(2));
 
@@ -73,8 +81,8 @@ async function loadBars() {
   const feed = String(args.feed ?? 'iex') === 'sip' ? 'sip' : 'iex';
   const limit = Math.max(1, Number(args.limit ?? 1000));
 
-  const { AlpacaClient } = await import(path.join(distDir, 'broker/alpaca/rest.js'));
-  const { assetClassOf } = await import(path.join(distDir, 'broker/alpaca/symbols.js'));
+  const { AlpacaClient } = await importPath(distDir, 'broker/alpaca/rest.js');
+  const { assetClassOf } = await importPath(distDir, 'broker/alpaca/symbols.js');
   const client = new AlpacaClient({ keyId, secretKey, mode, feed });
 
   const symbols = String(args.symbols).split(',').map((s) => s.trim()).filter(Boolean);
@@ -96,7 +104,7 @@ if (args.params) {
   params = JSON.parse(readFileSync(file, 'utf8'));
 }
 
-const { runBacktest } = await import(path.join(root, 'backtest/harness.mjs'));
+const { runBacktest } = await importPath(root, 'backtest/harness.mjs');
 
 const result = await runBacktest({
   barsBySymbol,

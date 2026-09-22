@@ -10,16 +10,16 @@ import assert from 'node:assert/strict';
 import { generateKeyPairSync } from 'node:crypto';
 import path from 'node:path';
 import test from 'node:test';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const { CoinbaseClient, toCoinbaseProduct, fromCoinbaseProduct } = await import(
   path.join(root, 'dist-esm/broker/coinbase/rest.js')
 );
-const { RobinhoodClient } = await import(path.join(root, 'dist-esm/broker/robinhood/rest.js'));
-const { UpholdClient } = await import(path.join(root, 'dist-esm/broker/uphold/rest.js'));
-const { JupiterClient } = await import(path.join(root, 'dist-esm/broker/jupiter/rest.js'));
-const { PollingStreams, barsFromPrices } = await import(path.join(root, 'dist-esm/broker/polling.js'));
+const { RobinhoodClient } = await import(pathToFileURL(path.join(root, 'dist-esm/broker/robinhood/rest.js')).href);
+const { UpholdClient } = await import(pathToFileURL(path.join(root, 'dist-esm/broker/uphold/rest.js')).href);
+const { JupiterClient } = await import(pathToFileURL(path.join(root, 'dist-esm/broker/jupiter/rest.js')).href);
+const { PollingStreams, barsFromPrices } = await import(pathToFileURL(path.join(root, 'dist-esm/broker/polling.js')).href);
 const { normalizeForVenue, unsupportedSymbols, defaultWatchlistFor, VENUE_LIST } = await import(
   path.join(root, 'dist-esm/broker/registry.js')
 );

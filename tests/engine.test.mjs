@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const { TradingEngine } = await import(path.join(root, 'dist-esm/engine/engine.js'));
-const { normalizeParameters, DEFAULT_PARAMETERS } = await import(path.join(root, 'dist-esm/engine/parameters.js'));
+const { TradingEngine } = await import(pathToFileURL(path.join(root, 'dist-esm/engine/engine.js')).href);
+const { normalizeParameters, DEFAULT_PARAMETERS } = await import(pathToFileURL(path.join(root, 'dist-esm/engine/parameters.js')).href);
 
 const MINUTE = 60_000;
 const T0 = Date.UTC(2026, 0, 5, 15, 0, 0); // a Monday, mid-session

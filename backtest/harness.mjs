@@ -23,11 +23,19 @@
  */
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
 const distDir = path.join(root, 'dist-esm');
+
+/**
+ * A bare Windows path (e.g. "C:\...") passed to import() throws
+ * ERR_UNSUPPORTED_ESM_URL_SCHEME — Node's ESM loader treats the drive
+ * letter as a URL scheme. file:// URLs work on every OS, so build one
+ * instead of relying on the loader to accept a raw filesystem path.
+ */
+const importPath = (...segments) => import(pathToFileURL(path.join(...segments)).href);
 
 async function loadDist() {
   const engineFile = path.join(distDir, 'engine/engine.js');
@@ -35,12 +43,12 @@ async function loadDist() {
     throw new Error('Engine build missing. Run: node tools/build-node.mjs');
   }
   const [engine, parameters, analytics, symbols, indicators, venues] = await Promise.all([
-    import(engineFile),
-    import(path.join(distDir, 'engine/parameters.js')),
-    import(path.join(distDir, 'engine/analytics.js')),
-    import(path.join(distDir, 'broker/alpaca/symbols.js')),
-    import(path.join(distDir, 'engine/indicators.js')),
-    import(path.join(distDir, 'broker/venues.js')),
+    importPath(distDir, 'engine/engine.js'),
+    importPath(distDir, 'engine/parameters.js'),
+    importPath(distDir, 'engine/analytics.js'),
+    importPath(distDir, 'broker/alpaca/symbols.js'),
+    importPath(distDir, 'engine/indicators.js'),
+    importPath(distDir, 'broker/venues.js'),
   ]);
   return { engine, parameters, analytics, symbols, indicators, venues };
 }

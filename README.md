@@ -176,6 +176,27 @@ export ALPACA_KEY_ID=... ALPACA_SECRET_KEY=... TRADERUNNER_LICENSE=TR1....
 npm run headless -- --paper --symbols AAPL,NVDA,BTC/USD
 ```
 
+For any other venue, point it at a credentials file instead (same shape as
+the app's own credential object — see each venue's descriptor in
+`src/broker/registry.ts` for its exact fields):
+
+```bash
+echo '{"venue":"jupiter","privateKey":"...","rpcUrl":"...","slippageBps":"50"}' > jupiter-creds.json
+npm run headless -- --creds-file jupiter-creds.json --symbols SOL/USDC
+```
+
+`*-creds.json` is gitignored, but treat it like any other live private key —
+delete it when you're done, don't leave it lying around.
+
+This is not just a convenience for a machine that stays on: **some venue
+APIs (Jupiter's quote API among them) do not send CORS headers, so a browser
+refuses to let the web build call them at all** — every request is blocked
+before it leaves the tab, visible in DevTools → Network as "CORS Failed."
+That is a browser-only restriction with no client-side fix; Node's `fetch`
+does not enforce CORS, so the exact same code works from here (and would
+work the same way from a native iOS/Android build, which also doesn't
+enforce it).
+
 It is gated by the same license check as the app. Add `--control-port` and
 `--control-token` (or `CONTROL_PORT`/`CONTROL_TOKEN`) to run a small local
 HTTP control server (`headless/control-server.mjs`) alongside it —

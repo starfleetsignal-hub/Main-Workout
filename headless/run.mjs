@@ -2,14 +2,27 @@
 /**
  * Headless runner: the same engine the app uses, driven from a terminal.
  *
- *   npm run headless -- --paper
+ *   npm run headless -- --paper                                  # Alpaca, via env vars below
+ *   npm run headless -- --creds-file jupiter-creds.json           # any venue
  *
  * Useful for leaving the engine running on a machine that stays awake, or for
  * watching its decisions in a log. It is gated by the same license check as
  * the app, so it is not a way around the paywall.
  *
+ * It is also the way around a real limitation of the web build: some venue
+ * APIs (Jupiter's quote API among them) do not send CORS headers, so a
+ * browser refuses to let the app call them at all — that is a browser-only
+ * restriction, not a network problem, and it does not exist here since
+ * Node's fetch does not enforce CORS.
+ *
+ * --creds-file points at a JSON file shaped like this app's own credential
+ * object: {"venue":"jupiter","privateKey":"...","rpcUrl":"...","slippageBps":"50"}
+ * (venue is one of alpaca, coinbase, robinhood, uphold, jupiter — see each
+ * venue's descriptor in src/broker/registry.ts for its exact field names).
+ * Keep that file out of version control the same way you would a live API key.
+ *
  * Environment:
- *   ALPACA_KEY_ID, ALPACA_SECRET_KEY   required
+ *   ALPACA_KEY_ID, ALPACA_SECRET_KEY   Alpaca shorthand; ignored if --creds-file is set
  *   ALPACA_MODE=paper|live             default paper
  *   ALPACA_FEED=iex|sip                default iex
  *   TRADERUNNER_LICENSE                your license key
@@ -61,19 +74,33 @@ if (!licenseCheck.ok) {
 console.log(`License OK — ${licenseCheck.payload.sub} (${licenseCheck.payload.plan})`);
 
 // --- broker credentials ------------------------------------------------------
-const keyId = process.env.ALPACA_KEY_ID ?? '';
-const secretKey = process.env.ALPACA_SECRET_KEY ?? '';
-if (!keyId || !secretKey) {
-  console.error('Set ALPACA_KEY_ID and ALPACA_SECRET_KEY.');
-  process.exit(1);
-}
-const mode = args.live ? 'live' : (process.env.ALPACA_MODE ?? 'paper') === 'live' && !args.paper ? 'live' : 'paper';
-const feed = String(process.env.ALPACA_FEED ?? 'iex') === 'sip' ? 'sip' : 'iex';
-
-const { AlpacaClient } = await import(path.join(distDir, 'broker/alpaca/rest.js'));
-const { AlpacaStreams } = await import(path.join(distDir, 'broker/alpaca/stream.js'));
+const { createConnection } = await import(path.join(distDir, 'broker/registry.js'));
 const { TradingEngine } = await import(path.join(distDir, 'engine/engine.js'));
 const { normalizeParameters, DEFAULT_PARAMETERS } = await import(path.join(distDir, 'engine/parameters.js'));
+
+let creds;
+let mode = 'paper';
+if (args['creds-file']) {
+  const file = path.resolve(process.cwd(), String(args['creds-file']));
+  creds = JSON.parse(readFileSync(file, 'utf8'));
+  if (!creds.venue) {
+    console.error(`${file} needs a "venue" field (alpaca, coinbase, robinhood, uphold, or jupiter).`);
+    process.exit(1);
+  }
+  mode = args.live ? 'live' : creds.mode ?? 'paper';
+  creds.mode = mode;
+  console.log(`Loaded ${creds.venue} credentials from ${file}`);
+} else {
+  const keyId = process.env.ALPACA_KEY_ID ?? '';
+  const secretKey = process.env.ALPACA_SECRET_KEY ?? '';
+  if (!keyId || !secretKey) {
+    console.error('Set ALPACA_KEY_ID and ALPACA_SECRET_KEY, or pass --creds-file for another venue.');
+    process.exit(1);
+  }
+  mode = args.live ? 'live' : (process.env.ALPACA_MODE ?? 'paper') === 'live' && !args.paper ? 'live' : 'paper';
+  const feed = String(process.env.ALPACA_FEED ?? 'iex') === 'sip' ? 'sip' : 'iex';
+  creds = { venue: 'alpaca', keyId, secretKey, mode, feed };
+}
 
 let params = normalizeParameters(DEFAULT_PARAMETERS);
 if (args.params) {
@@ -85,10 +112,10 @@ if (args.symbols) {
   params = normalizeParameters({ ...params, watchlist: String(args.symbols).split(',') });
 }
 
-const creds = { keyId, secretKey, mode, feed };
-const engine = new TradingEngine({ broker: new AlpacaClient(creds), streams: new AlpacaStreams(creds) }, params);
+const { broker, streams } = createConnection(creds);
+const engine = new TradingEngine({ broker, streams }, params);
 
-console.log(`Mode: ${mode.toUpperCase()}  Feed: ${feed.toUpperCase()}`);
+console.log(`Venue: ${broker.label}  Mode: ${mode.toUpperCase()}`);
 console.log(`Watchlist: ${params.watchlist.join(', ')}`);
 if (mode === 'live') console.log('*** LIVE MODE — real orders with real money ***');
 

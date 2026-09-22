@@ -681,3 +681,125 @@ test('a 1% drop does not trip a 2% daily loss limit', async () => {
   await settle();
   assert.equal(engine.snapshot().status, 'running');
 });
+
+// ---------------------------------------------------------------------------
+// Asset-class exposure cap
+// ---------------------------------------------------------------------------
+
+test('the asset-class exposure cap limits combined stock exposure across symbols', async () => {
+  const bars = { AAPL: bullishBars('AAPL', 60, 100), MSFT: bullishBars('MSFT', 60, 200) };
+  const { engine, broker, streams } = makeEngine(
+    {
+      watchlist: ['AAPL', 'MSFT'],
+      tradeCrypto: false,
+      maxOpenPositions: 5,
+      maxPositionPct: 100,
+      maxAssetClassExposurePct: 5, // $5,000 of $100,000 equity
+      riskPerTradePct: 5,
+      stopLossPct: 1,
+    },
+    { bars }
+  );
+  await engine.start();
+
+  const aaplPrice = bars.AAPL.at(-1).c;
+  streams.handlers.onTick('AAPL', aaplPrice, 10, T0);
+  await settle();
+
+  const first = engine.snapshot().positions.AAPL;
+  assert.ok(first, 'expected the first position to open');
+  const notional = first.qty * aaplPrice;
+  assert.ok(notional <= 5000 + 1, `first position notional ${notional} should respect the 5% class cap`);
+
+  const msftPrice = bars.MSFT.at(-1).c;
+  streams.handlers.onTick('MSFT', msftPrice, 10, T0);
+  await settle();
+
+  assert.equal(engine.snapshot().positions.MSFT, undefined, 'the class budget should already be spent');
+  assert.equal(broker.orders.length, 1, 'only the first order should have been placed');
+});
+
+test('the exposure cap is per asset class, not global', async () => {
+  const bars = { AAPL: bullishBars('AAPL', 60, 100), 'BTC/USD': bullishBars('BTC/USD', 60, 50_000) };
+  const { engine, broker, streams } = makeEngine(
+    {
+      watchlist: ['AAPL', 'BTC/USD'],
+      maxOpenPositions: 5,
+      maxPositionPct: 100,
+      maxAssetClassExposurePct: 5,
+      riskPerTradePct: 5,
+      stopLossPct: 1,
+    },
+    { bars }
+  );
+  await engine.start();
+
+  streams.handlers.onTick('AAPL', bars.AAPL.at(-1).c, 10, T0);
+  await settle();
+  streams.handlers.onTick('BTC/USD', bars['BTC/USD'].at(-1).c, 1, T0);
+  await settle();
+
+  assert.ok(engine.snapshot().positions.AAPL, 'stock exposure should be used');
+  assert.ok(engine.snapshot().positions['BTC/USD'], 'crypto has its own separate exposure budget');
+  assert.equal(broker.orders.length, 2);
+});
+
+// ---------------------------------------------------------------------------
+// Slippage guard
+// ---------------------------------------------------------------------------
+
+test('a bad fill triggers the slippage guard and cools the symbol down', async () => {
+  const bars = { AAPL: bullishBars('AAPL') };
+  const { engine, broker, streams } = makeEngine(
+    { watchlist: ['AAPL'], tradeCrypto: false, maxSlippagePct: 0.5 },
+    { bars, fillPrice: 130 } // tick price will be ~115; a big gap from the sizing price
+  );
+  await engine.start();
+  streams.handlers.onTick('AAPL', 115, 10, T0);
+  await settle();
+
+  const snap = engine.snapshot();
+  assert.ok(snap.positions.AAPL, 'the position still opens; the guard cannot undo a market fill');
+  assert.ok(
+    snap.activity.some((e) => e.level === 'warn' && e.message.includes('Slippage guard')),
+    'the bad fill should be logged'
+  );
+  assert.ok(snap.symbols.AAPL.cooldownUntil > T0, 'the symbol should be cooling down after a bad fill');
+});
+
+test('a fill within tolerance does not trigger the slippage guard', async () => {
+  const bars = { AAPL: bullishBars('AAPL') };
+  const { engine, streams } = makeEngine(
+    { watchlist: ['AAPL'], tradeCrypto: false, maxSlippagePct: 0.5 },
+    { bars, fillPrice: 115.2 } // within 0.5% of the 115 tick
+  );
+  await engine.start();
+  streams.handlers.onTick('AAPL', 115, 10, T0);
+  await settle();
+
+  const snap = engine.snapshot();
+  assert.ok(snap.positions.AAPL);
+  assert.ok(!snap.activity.some((e) => e.message.includes('Slippage guard')));
+  assert.equal(snap.symbols.AAPL.cooldownUntil, 0);
+});
+
+// ---------------------------------------------------------------------------
+// Equity history
+// ---------------------------------------------------------------------------
+
+test('the engine records an equity sample on start and on housekeeping', async () => {
+  const bars = { AAPL: bullishBars('AAPL') };
+  const { engine, broker, advance } = makeEngine({ watchlist: ['AAPL'], tradeCrypto: false }, { bars, equity: 50_000 });
+  await engine.start();
+  assert.ok(engine.snapshot().equityHistory.length >= 1);
+  assert.equal(engine.snapshot().equityHistory.at(-1).equity, 50_000);
+
+  broker.equity = 51_000;
+  advance(2000); // past the dedup window, so this sample is not treated as a duplicate
+  await engine.housekeeping();
+  await settle();
+
+  const history = engine.snapshot().equityHistory;
+  assert.equal(history.at(-1).equity, 51_000);
+  assert.ok(history.length >= 2, 'a second, distinct sample should have been recorded');
+});

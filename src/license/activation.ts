@@ -44,9 +44,14 @@ export interface Lease extends LeasePayload {
   token: string;
 }
 
+/** A pending "flatten everything now" command broadcast from the activation server. */
+export interface FlattenNotice {
+  reason: string;
+}
+
 export type ActivationState =
   | { status: 'unknown' }
-  | { status: 'active'; lease: Lease }
+  | { status: 'active'; lease: Lease; pendingFlatten: FlattenNotice | null }
   | { status: 'grace'; lease: Lease; until: number }
   | { status: 'revoked'; reason: string }
   | { status: 'seat_limit'; seats: number; maxSeats: number }
@@ -116,6 +121,14 @@ export interface ActivationResponse {
   message?: string;
   seats?: number;
   maxSeats?: number;
+  /**
+   * Set on every activate/renew response while an operator has an emergency
+   * flatten pending for this license. Not part of the signed lease: it is
+   * advisory, not a security control, and the worst a forged copy of it can
+   * do is make the app close its own positions early.
+   */
+  flatten?: boolean;
+  flattenReason?: string;
 }
 
 /**
@@ -166,7 +179,11 @@ export async function requestActivation(
       // misconfigured rather than as a refusal.
       return { status: 'offline', detail: `Lease failed verification (${verified.reason})` };
     }
-    return { status: 'active', lease: verified.lease };
+    return {
+      status: 'active',
+      lease: verified.lease,
+      pendingFlatten: body.flatten ? { reason: body.flattenReason ?? 'Requested by the license owner.' } : null,
+    };
   } catch (e) {
     return { status: 'offline', detail: e instanceof Error ? e.message : String(e) };
   } finally {

@@ -12,6 +12,14 @@ export const LICENSE_PUBLIC_KEY_HEX: string = (process.env.EXPO_PUBLIC_LICENSE_P
 export const PURCHASE_URL: string = (process.env.EXPO_PUBLIC_PURCHASE_URL ?? '').trim();
 
 /**
+ * Hosted privacy policy / terms of use, required by the app stores before you
+ * can submit. Empty hides the links — see legal/PRIVACY.md and legal/TERMS.md
+ * for templates to fill in and host before you set these.
+ */
+export const PRIVACY_POLICY_URL: string = (process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ?? '').trim();
+export const TERMS_URL: string = (process.env.EXPO_PUBLIC_TERMS_URL ?? '').trim();
+
+/**
  * Base URL of the activation server. Empty means offline-only licensing:
  * the app verifies signatures and expiry, but does not count devices or
  * support revocation.

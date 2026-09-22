@@ -15,6 +15,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark, LockIcon } from '../src/components/icons';
 import { useLicense } from '../src/context/LicenseContext';
+import { useRisk } from '../src/context/RiskContext';
 import { LICENSE_PUBLIC_KEY_HEX, PURCHASE_URL } from '../src/license/publicKey';
 import { colors } from '../src/theme/colors';
 import { fonts } from '../src/theme/fonts';
@@ -32,6 +33,7 @@ export default function ActivateScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { activate, lockReason, busy, activationEnabled } = useLicense();
+  const { acknowledged } = useRisk();
   const [key, setKey] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -40,7 +42,7 @@ export default function ActivateScreen() {
   const onActivate = async () => {
     setError(null);
     const res = await activate(key);
-    if (res.ok) router.replace('/(tabs)/dashboard');
+    if (res.ok) router.replace(acknowledged ? '/(tabs)/dashboard' : '/risk-ack');
     else setError(res.error);
   };
 

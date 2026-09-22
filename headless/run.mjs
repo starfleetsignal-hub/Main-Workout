@@ -14,6 +14,8 @@
  *   ALPACA_FEED=iex|sip                default iex
  *   TRADERUNNER_LICENSE                your license key
  *   EXPO_PUBLIC_LICENSE_PUBLIC_KEY     or a .env file with it
+ *   CONTROL_TOKEN, CONTROL_PORT        optional local kill-switch server;
+ *                                      see headless/control-server.mjs
  */
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -106,6 +108,24 @@ engine.subscribe((snap) => {
     }
   }
 });
+
+const controlPort = Number(process.env.CONTROL_PORT ?? args['control-port'] ?? 0) || null;
+if (controlPort) {
+  const controlToken = process.env.CONTROL_TOKEN ?? (args['control-token'] ? String(args['control-token']) : '');
+  if (!controlToken) {
+    console.error('Set CONTROL_TOKEN (or --control-token) to enable the control server.');
+    process.exit(1);
+  }
+  const controlHost = String(process.env.CONTROL_HOST ?? args['control-host'] ?? '127.0.0.1');
+  const { startControlServer } = await import(path.join(root, 'headless/control-server.mjs'));
+  await startControlServer({ engine, token: controlToken, port: controlPort, host: controlHost });
+  console.log(`Control server on ${controlHost}:${controlPort} — POST /flatten, POST /stop?flatten=1, GET /status`);
+  if (controlHost !== '127.0.0.1' && controlHost !== 'localhost') {
+    console.warn(
+      `WARNING: control server bound to ${controlHost}, not localhost. Make sure this is behind your own firewall or VPN — it is not internet-safe on its own.`
+    );
+  }
+}
 
 const shutdown = async (signal) => {
   console.log(`\n${signal} — stopping engine (positions are left open; use --flatten-on-exit to close them).`);

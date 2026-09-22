@@ -8,9 +8,11 @@ import type {
   AccountSnapshot,
   ActivityEvent,
   ActivityLevel,
+  AssetClass,
   Bar,
   EngineSnapshot,
   EngineStatus,
+  EquityPoint,
   ExitReason,
   MarketClock,
   NewsItem,
@@ -40,10 +42,13 @@ export interface EngineOptions {
   maxActivity?: number;
   /** Max news items retained globally. */
   maxNews?: number;
+  /** Max equity samples retained for the performance curve. */
+  maxEquityPoints?: number;
 }
 
 const MAX_BARS = 400;
-const BOOTSTRAP_BARS = 300;
+/** Bars requested per symbol on start. Exported so the backtest harness can mirror the live warm-up window. */
+export const BOOTSTRAP_BARS = 300;
 /** Minimum gap between tick-driven entry evaluations for one symbol. */
 const EVAL_THROTTLE_MS = 1000;
 
@@ -82,6 +87,8 @@ export class TradingEngine {
   private lastEvalAt: Record<string, number> = {};
   /** Equity first seen today, used where the venue publishes no prior-day mark. */
   private dayStartEquity: number | null = null;
+  /** Equity samples for the performance curve, oldest first. */
+  private equityHistory: EquityPoint[] = [];
   private housekeepingTimer: ReturnType<typeof setInterval> | null = null;
   private listeners = new Set<(s: EngineSnapshot) => void>();
   private emitTimer: ReturnType<typeof setTimeout> | null = null;
@@ -100,6 +107,7 @@ export class TradingEngine {
       maxBars: opts.maxBars ?? MAX_BARS,
       maxActivity: opts.maxActivity ?? 300,
       maxNews: opts.maxNews ?? 200,
+      maxEquityPoints: opts.maxEquityPoints ?? 1000,
     };
     for (const s of params.watchlist) this.ensureSymbol(s);
   }
@@ -132,6 +140,7 @@ export class TradingEngine {
       realizedPnlToday: this.realizedPnlToday,
       streams: { ...this.streams },
       lastTickAt: this.lastTickAt,
+      equityHistory: [...this.equityHistory],
     };
   }
 
@@ -380,6 +389,19 @@ export class TradingEngine {
         `Opened ${side.toUpperCase()} ${filled.filledQty} @ ${fmtPrice(entry)} · stop ${fmtPrice(pos.stopPrice)} · target ${fmtPrice(pos.takeProfitPrice)}`,
         symbol
       );
+
+      // The order is already filled and cannot be undone; the guard's job is
+      // to notice a bad fill and stop the engine from compounding it, not to
+      // prevent the fill itself.
+      const slippagePct = price > 0 ? (Math.abs(entry - price) / price) * 100 : 0;
+      if (slippagePct > this.params.maxSlippagePct) {
+        st.cooldownUntil = Math.max(st.cooldownUntil, this.now() + this.params.cooldownMinutes * 60_000);
+        this.log(
+          'warn',
+          `Slippage guard: filled ${slippagePct.toFixed(2)}% away from the ${fmtPrice(price)} this was sized at (limit ${this.params.maxSlippagePct}%); cooling down`,
+          symbol
+        );
+      }
     } catch (e) {
       this.log('error', `Entry failed: ${errorMessage(e)}`, symbol);
     } finally {
@@ -396,12 +418,30 @@ export class TradingEngine {
     let qty = stopDistance > 0 ? riskAmount / stopDistance : 0;
     const maxNotional = (equity * this.params.maxPositionPct) / 100;
     qty = Math.min(qty, maxNotional / price);
+
+    // Cap combined exposure across all open positions in this asset class,
+    // independent of the single-position cap above.
+    const classExposure = this.assetClassExposure(st.assetClass);
+    const classBudget = Math.max(0, (equity * this.params.maxAssetClassExposurePct) / 100 - classExposure);
+    qty = Math.min(qty, classBudget / price);
+
     const bp = st.assetClass === 'crypto' ? Math.min(acct.cash, acct.buyingPower) : acct.buyingPower;
     qty = Math.min(qty, (bp * 0.95) / price);
     if (st.assetClass === 'crypto') qty = floorTo(qty, 4);
     else qty = this.params.fractionalShares ? floorTo(qty, 2) : Math.floor(qty);
     if (qty * price < 1) return 0;
     return qty;
+  }
+
+  /** Current mark-to-market notional of open positions in one asset class. */
+  private assetClassExposure(assetClass: AssetClass): number {
+    let sum = 0;
+    for (const pos of Object.values(this.positions)) {
+      if (pos.assetClass !== assetClass) continue;
+      const price = this.symbols[pos.symbol]?.lastPrice || pos.entryPrice;
+      sum += pos.qty * price;
+    }
+    return sum;
   }
 
   private applyExitLevels(pos: OpenPosition, entry: number) {
@@ -519,6 +559,18 @@ export class TradingEngine {
     this.account = account;
     this.clock = clock;
     if (this.dayStartEquity === null && account.equity > 0) this.dayStartEquity = account.equity;
+    if (account.equity > 0) this.recordEquity(account.equity);
+  }
+
+  /** Appends an equity sample, capped so the history stays a bounded size. */
+  private recordEquity(equity: number) {
+    const t = this.now();
+    const last = this.equityHistory[this.equityHistory.length - 1];
+    if (last && t - last.t < 1000) return; // avoid duplicate samples within the same tick
+    this.equityHistory.push({ t, equity });
+    if (this.equityHistory.length > this.opts.maxEquityPoints) {
+      this.equityHistory.splice(0, this.equityHistory.length - this.opts.maxEquityPoints);
+    }
   }
 
   /**

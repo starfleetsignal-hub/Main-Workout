@@ -238,7 +238,7 @@ test('an unreachable server reports offline rather than refusing', async () => {
 const goodCheck = { ok: true, license: { sub: 'x', plan: 'lifetime', exp: null, key: 'k', v: 1, id: 'i', iat: 0 } };
 
 test('an invalid signature stays locked whatever the server says', () => {
-  const d = decideUnlock({ ok: false, reason: 'bad_signature' }, { status: 'active', lease: fakeLease() }, config());
+  const d = decideUnlock({ ok: false, reason: 'bad_signature' }, { status: 'active', lease: fakeLease(), pendingFlatten: null }, config());
   assert.equal(d.unlocked, false);
 });
 
@@ -280,12 +280,12 @@ test('an expired lease keeps working through the grace window, then stops', () =
 
 test('a lease past its halfway point asks to be renewed', () => {
   const now = Math.floor(Date.now() / 1000);
-  const fresh = decideUnlock(goodCheck, { status: 'active', lease: fakeLease({ iat: now, exp: now + 3600 }) }, config(), now);
+  const fresh = decideUnlock(goodCheck, { status: 'active', lease: fakeLease({ iat: now, exp: now + 3600 }), pendingFlatten: null }, config(), now);
   assert.equal(fresh.needsRenewal, false);
 
   const stale = decideUnlock(
     goodCheck,
-    { status: 'active', lease: fakeLease({ iat: now - 3000, exp: now + 600 }) },
+    { status: 'active', lease: fakeLease({ iat: now - 3000, exp: now + 600 }), pendingFlatten: null },
     config(),
     now
   );
@@ -296,3 +296,75 @@ function fakeLease(over = {}) {
   const now = Math.floor(Date.now() / 1000);
   return { v: 1, lid: 'lic', did: 'dev', iat: now, exp: now + 3600, seats: 1, maxSeats: 3, token: 'TRL1.a.b', ...over };
 }
+
+// ---------------------------------------------------------------------------
+// Remote flatten command
+// ---------------------------------------------------------------------------
+
+test('a pending flatten command is surfaced on activate and renew', async () => {
+  const { key, payload } = makeLicense('flatten-a@example.com');
+  const first = await activate(key, 'fa1');
+  assert.equal(first.pendingFlatten, null, 'no flatten pending yet');
+
+  const res = await admin('flatten', { licenseId: payload.id, reason: 'Support requested an emergency stop.' });
+  assert.equal(res.status, 200);
+  assert.ok(res.body.pendingFlatten, 'the admin response should echo the pending command');
+
+  const renewed = await activate(key, 'fa1', 'renew');
+  assert.equal(renewed.status, 'active');
+  assert.deepEqual(renewed.pendingFlatten, { reason: 'Support requested an emergency stop.' });
+});
+
+test('every device checking in sees the same pending flatten command', async () => {
+  const { key, payload } = makeLicense('flatten-b@example.com');
+  await activate(key, 'fb1');
+  await activate(key, 'fb2');
+  await admin('flatten', { licenseId: payload.id, reason: 'stop' });
+
+  const one = await activate(key, 'fb1', 'renew');
+  const two = await activate(key, 'fb2', 'renew');
+  assert.ok(one.pendingFlatten, 'device one should see it');
+  assert.ok(two.pendingFlatten, 'device two should also see it, not just whichever checked in first');
+});
+
+test('clearing the flatten command stops it from being reported', async () => {
+  const { key, payload } = makeLicense('flatten-c@example.com');
+  await activate(key, 'fc1');
+  await admin('flatten', { licenseId: payload.id, reason: 'stop' });
+  assert.ok((await activate(key, 'fc1', 'renew')).pendingFlatten);
+
+  const cleared = await admin('flatten-clear', { licenseId: payload.id });
+  assert.equal(cleared.status, 200);
+
+  const after = await activate(key, 'fc1', 'renew');
+  assert.equal(after.pendingFlatten, null, 'should no longer be reported once cleared');
+});
+
+test('a default reason is used when the admin does not give one', async () => {
+  const { key, payload } = makeLicense('flatten-d@example.com');
+  await activate(key, 'fd1');
+  await admin('flatten', { licenseId: payload.id });
+  const renewed = await activate(key, 'fd1', 'renew');
+  assert.match(renewed.pendingFlatten.reason, /license owner/i);
+});
+
+test('the flatten command does not require the admin token to be missing elsewhere', async () => {
+  const res = await fetch(`${baseUrl}/admin/flatten`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ licenseId: 'x' }),
+  });
+  assert.equal(res.status, 401, 'the flatten route must be behind the admin token like every other admin route');
+});
+
+test('the admin listing surfaces which licenses have a flatten pending', async () => {
+  const { key, payload } = makeLicense('flatten-e@example.com');
+  await activate(key, 'fe1');
+  await admin('flatten', { licenseId: payload.id, reason: 'audit' });
+
+  const res = await fetch(`${baseUrl}/admin/licenses`, { headers: { Authorization: `Bearer ${ADMIN_TOKEN}` } });
+  const body = await res.json();
+  const row = body.licenses.find((l) => l.licenseId === payload.id);
+  assert.ok(row.pendingFlatten, 'the listing should show the pending command');
+  assert.equal(row.pendingFlatten.reason, 'audit');
+});

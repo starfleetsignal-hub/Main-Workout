@@ -2,7 +2,7 @@
   "expo": {
     "name": "TradeRunner",
     "slug": "traderunner",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "traderunner",
@@ -42,6 +42,13 @@
           "imageWidth": 180,
           "resizeMode": "contain",
           "backgroundColor": "#0B0E14"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#F5C542"
         }
       ]
     ],

@@ -7,6 +7,7 @@ import {
   type ActivationAction,
   type ActivationConfig,
   type ActivationState,
+  type FlattenNotice,
   type Lease,
 } from '../license/activation';
 import { getDeviceId, getDeviceName, getPlatform } from '../license/device';
@@ -34,6 +35,8 @@ interface LicenseContextValue {
   /** True when this build checks in with an activation server at all. */
   activationEnabled: boolean;
   seats: { used: number; max: number } | null;
+  /** A pending remote "flatten everything" command from the activation server, if any. */
+  remoteFlatten: FlattenNotice | null;
   deviceId: string | null;
   busy: boolean;
   activate: (rawKey: string) => Promise<{ ok: true } | { ok: false; error: string }>;
@@ -119,7 +122,7 @@ export function LicenseProvider({ children }: { children: React.ReactNode }) {
       const storedLease = await secureGet(LEASE_STORAGE_KEY);
       if (storedLease) {
         const verified = verifyLease(storedLease, LICENSE_PUBLIC_KEY_HEX);
-        if (verified.ok && !cancelled) setActivation({ status: 'active', lease: verified.lease });
+        if (verified.ok && !cancelled) setActivation({ status: 'active', lease: verified.lease, pendingFlatten: null });
         else if (!cancelled) {
           const expired = parseLeaseAnyway(storedLease);
           if (expired) setActivation(toGrace(expired, CONFIG.graceSeconds));
@@ -142,7 +145,7 @@ export function LicenseProvider({ children }: { children: React.ReactNode }) {
       } else if (storedLease) {
         // Server unreachable: keep whatever lease we already had.
         const verified = verifyLease(storedLease, LICENSE_PUBLIC_KEY_HEX);
-        setActivation(verified.ok ? { status: 'active', lease: verified.lease } : state);
+        setActivation(verified.ok ? { status: 'active', lease: verified.lease, pendingFlatten: null } : state);
       } else {
         setActivation(state);
       }
@@ -267,6 +270,8 @@ export function LicenseProvider({ children }: { children: React.ReactNode }) {
     return null;
   }, [activation]);
 
+  const remoteFlatten = activation.status === 'active' ? activation.pendingFlatten : null;
+
   const value = useMemo(
     () => ({
       license,
@@ -277,6 +282,7 @@ export function LicenseProvider({ children }: { children: React.ReactNode }) {
       activation,
       activationEnabled,
       seats,
+      remoteFlatten,
       deviceId,
       busy,
       activate,
@@ -288,6 +294,7 @@ export function LicenseProvider({ children }: { children: React.ReactNode }) {
       license,
       loaded,
       decision,
+      remoteFlatten,
       lockReason,
       activation,
       activationEnabled,

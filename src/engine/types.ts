@@ -163,6 +163,12 @@ export interface MarketClock {
 
 export type EngineStatus = 'stopped' | 'starting' | 'running' | 'halted' | 'error';
 
+/** One equity sample for the performance curve. */
+export interface EquityPoint {
+  t: number;
+  equity: number;
+}
+
 export interface EngineSnapshot {
   status: EngineStatus;
   statusDetail: string;
@@ -178,6 +184,8 @@ export interface EngineSnapshot {
   realizedPnlToday: number;
   streams: { stocks: StreamStatus; crypto: StreamStatus; news: StreamStatus };
   lastTickAt: number;
+  /** Equity samples taken over the session, oldest first, for the performance curve. */
+  equityHistory: EquityPoint[];
 }
 
 export type StreamStatus = 'off' | 'connecting' | 'connected' | 'reconnecting' | 'error';

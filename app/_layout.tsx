@@ -15,10 +15,15 @@ import { Starfield } from '../src/components/Starfield';
 import { CredentialsProvider } from '../src/context/CredentialsContext';
 import { EngineProvider } from '../src/context/EngineContext';
 import { LicenseProvider, useLicense } from '../src/context/LicenseContext';
+import { NotificationsProvider } from '../src/context/NotificationsContext';
+import { RiskProvider, useRisk } from '../src/context/RiskContext';
+import { ErrorBoundary } from '../src/errors/ErrorBoundary';
+import { installGlobalErrorHandlers } from '../src/errors/globalHandlers';
 import { colors } from '../src/theme/colors';
 import { fonts } from '../src/theme/fonts';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+installGlobalErrorHandlers();
 
 /**
  * React Navigation's own screen container paints `theme.colors.background`
@@ -47,25 +52,30 @@ const cosmicNavigationTheme: Theme = {
 };
 
 /**
- * The license gate lives here, at the root of the navigation tree.
+ * The license gate lives here, at the root of the navigation tree, alongside
+ * a second, independent gate for the one-time risk acknowledgment.
  *
  * `Stack.Protected` unmounts every screen inside it while `guard` is false,
  * so an unlicensed copy cannot reach the trading UI by deep link, by
  * `router.push`, or by restoring a saved navigation state — the routes do
  * not exist. When a license lapses, is revoked, or exceeds its device
  * allowance mid-session, the guard flips and the user lands back on the
- * activation screen automatically.
+ * activation screen automatically. The risk gate works the same way: a
+ * licensed-but-unacknowledged device can reach nothing but that one screen.
  */
 function RootNavigator() {
-  const { isUnlocked, loaded } = useLicense();
+  const { isUnlocked, loaded: licenseLoaded } = useLicense();
+  const { acknowledged, loaded: riskLoaded } = useRisk();
 
-  if (!loaded) {
+  if (!licenseLoaded || (isUnlocked && !riskLoaded)) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={colors.gold} />
       </View>
     );
   }
+
+  const pastRiskGate = isUnlocked && acknowledged;
 
   return (
     <Stack
@@ -82,7 +92,11 @@ function RootNavigator() {
         <Stack.Screen name="activate" options={{ headerShown: false }} />
       </Stack.Protected>
 
-      <Stack.Protected guard={isUnlocked}>
+      <Stack.Protected guard={isUnlocked && !acknowledged}>
+        <Stack.Screen name="risk-ack" options={{ headerShown: false }} />
+      </Stack.Protected>
+
+      <Stack.Protected guard={pastRiskGate}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="venues" options={{ title: 'Choose a venue', presentation: 'modal' }} />
         <Stack.Screen name="connect" options={{ title: 'Connect', presentation: 'modal' }} />
@@ -107,20 +121,26 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <SafeAreaProvider>
-      <View style={{ flex: 1, backgroundColor: colors.bgBottom }}>
-        <Starfield />
-        <ThemeProvider value={cosmicNavigationTheme}>
-          <LicenseProvider>
-            <CredentialsProvider>
-              <EngineProvider>
-                <StatusBar style="light" />
-                <RootNavigator />
-              </EngineProvider>
-            </CredentialsProvider>
-          </LicenseProvider>
-        </ThemeProvider>
-      </View>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <View style={{ flex: 1, backgroundColor: colors.bgBottom }}>
+          <Starfield />
+          <ThemeProvider value={cosmicNavigationTheme}>
+            <LicenseProvider>
+              <RiskProvider>
+                <NotificationsProvider>
+                  <CredentialsProvider>
+                    <EngineProvider>
+                      <StatusBar style="light" />
+                      <RootNavigator />
+                    </EngineProvider>
+                  </CredentialsProvider>
+                </NotificationsProvider>
+              </RiskProvider>
+            </LicenseProvider>
+          </ThemeProvider>
+        </View>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }

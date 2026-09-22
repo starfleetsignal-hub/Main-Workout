@@ -149,6 +149,15 @@ export default function ParametersScreen() {
           step={1}
           onChange={(v) => updateParameters({ maxOpenPositions: v })}
         />
+        <NumberSetting
+          label="Max exposure per class"
+          help="Cap on combined stock (or crypto) positions as a share of equity, independent of the single-position cap above."
+          value={p.maxAssetClassExposurePct}
+          {...PARAMETER_BOUNDS.maxAssetClassExposurePct}
+          step={PARAMETER_BOUNDS.maxAssetClassExposurePct.step!}
+          suffix="%"
+          onChange={(v) => updateParameters({ maxAssetClassExposurePct: v })}
+        />
         <SwitchSetting
           label="Fractional shares"
           help="Allow fractional stock quantities. Crypto is always fractional."
@@ -225,6 +234,16 @@ export default function ParametersScreen() {
           step={1}
           suffix="m"
           onChange={(v) => updateParameters({ cooldownMinutes: v })}
+        />
+        <NumberSetting
+          label="Slippage guard"
+          help="A fill this far from the price it was sized at is flagged and puts the symbol on cooldown. It cannot undo a market order that already filled."
+          value={p.maxSlippagePct}
+          {...PARAMETER_BOUNDS.maxSlippagePct}
+          step={PARAMETER_BOUNDS.maxSlippagePct.step!}
+          decimals={2}
+          suffix="%"
+          onChange={(v) => updateParameters({ maxSlippagePct: v })}
         />
       </SettingGroup>
 

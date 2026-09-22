@@ -7,6 +7,9 @@
  *
  *   - count how many devices are using one key, and refuse the next one
  *   - revoke a key after it has been sold
+ *   - broadcast a "flatten everything now" command to every device trading
+ *     under a license, for when you (or the customer) need an emergency
+ *     stop and cannot reach the device or box that is running it directly
  *
  * It deliberately fails open on its own errors. If this server is down, a
  * paying customer keeps trading on their existing lease until the grace
@@ -46,10 +49,12 @@ const publicKeyHex = publicKeyHexFromPrivate(privateKey);
  *   seats:    licenseId -> Map(deviceId -> {deviceName, platform, firstSeen, lastSeen})
  *   revoked:  licenseId -> reason
  *   limits:   licenseId -> maxSeats override
+ *   flatten:  licenseId -> {reason, at} while a flatten command is pending
  */
 const seats = new Map();
 const revoked = new Map();
 const limits = new Map();
+const flatten = new Map();
 
 function apply(rec) {
   switch (rec.type) {
@@ -76,6 +81,12 @@ function apply(rec) {
       break;
     case 'limit':
       limits.set(rec.licenseId, Number(rec.maxSeats));
+      break;
+    case 'flatten-request':
+      flatten.set(rec.licenseId, { reason: rec.reason ?? 'Requested by the license owner.', at: rec.at });
+      break;
+    case 'flatten-clear':
+      flatten.delete(rec.licenseId);
       break;
     default:
       break;
@@ -219,11 +230,16 @@ const server = createServer(async (req, res) => {
 
       record({ type: 'activate', licenseId, deviceId, deviceName, platform });
       const count = seats.get(licenseId).size;
+      const pendingFlatten = flatten.get(licenseId);
       return send(200, {
         ok: true,
         lease: issueLease(licenseId, deviceId, count, maxSeats),
         seats: count,
         maxSeats,
+        // Present on every activate/renew response until an operator clears it
+        // via /admin/flatten-clear, so every device that checks in (not just
+        // whichever one happens to be first) sees and acts on the command.
+        ...(pendingFlatten ? { flatten: true, flattenReason: pendingFlatten.reason } : {}),
       });
     }
 
@@ -239,6 +255,7 @@ const server = createServer(async (req, res) => {
             seats: devices.size,
             maxSeats: maxSeatsFor(licenseId),
             revoked: revoked.has(licenseId),
+            pendingFlatten: flatten.get(licenseId) ?? null,
             devices: [...devices.entries()].map(([id, d]) => ({ deviceId: id, ...d })),
           });
         }
@@ -270,6 +287,14 @@ const server = createServer(async (req, res) => {
           const devices = seats.get(licenseId);
           if (devices) for (const deviceId of [...devices.keys()]) record({ type: 'deactivate', licenseId, deviceId });
           return send(200, { ok: true, licenseId, seats: 0 });
+        }
+        if (url.pathname === '/admin/flatten') {
+          record({ type: 'flatten-request', licenseId, reason: String(body.reason ?? '') || undefined });
+          return send(200, { ok: true, licenseId, pendingFlatten: flatten.get(licenseId) });
+        }
+        if (url.pathname === '/admin/flatten-clear') {
+          record({ type: 'flatten-clear', licenseId });
+          return send(200, { ok: true, licenseId });
         }
       }
       return send(404, { ok: false, message: 'unknown admin route' });

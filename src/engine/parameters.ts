@@ -19,6 +19,13 @@ export interface Parameters {
   maxOpenPositions: number;
   /** Allow fractional share quantities for stocks. */
   fractionalShares: boolean;
+  /**
+   * Cap on combined open-position notional in one asset class (stocks or
+   * crypto combined) as a % of equity. Independent of maxPositionPct, which
+   * only bounds a single position: this bounds concentration across all of
+   * them. 100 effectively disables it.
+   */
+  maxAssetClassExposurePct: number;
 
   // --- Daily circuit breakers ---------------------------------------------
   /** If today's P&L falls below -X% of starting equity, flatten and halt. */
@@ -37,6 +44,13 @@ export interface Parameters {
   exitOnTrendBreak: boolean;
   /** Per-symbol cooldown after an exit before re-entering. */
   cooldownMinutes: number;
+  /**
+   * If a fill lands worse than this far from the price the entry was sized
+   * against, the engine logs a warning and puts the symbol on cooldown
+   * rather than treating the fill as if it went as planned. It cannot undo
+   * a market order that has already filled.
+   */
+  maxSlippagePct: number;
 
   // --- Sessions -----------------------------------------------------------
   /** Only trade stocks during the regular session. */
@@ -75,6 +89,7 @@ export const DEFAULT_PARAMETERS: Parameters = {
   maxPositionPct: 20,
   maxOpenPositions: 3,
   fractionalShares: true,
+  maxAssetClassExposurePct: 60,
 
   maxDailyLossPct: 2,
   maxDailyTrades: 15,
@@ -85,6 +100,7 @@ export const DEFAULT_PARAMETERS: Parameters = {
   maxHoldMinutes: 120,
   exitOnTrendBreak: true,
   cooldownMinutes: 15,
+  maxSlippagePct: 0.5,
 
   stockSessionOnly: true,
   flattenBeforeCloseMinutes: 10,
@@ -118,11 +134,13 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
       riskPerTradePct: 0.25,
       maxPositionPct: 10,
       maxOpenPositions: 2,
+      maxAssetClassExposurePct: 40,
       maxDailyLossPct: 1,
       maxDailyTrades: 8,
       stopLossPct: 0.6,
       takeProfitPct: 1.2,
       trailingStopPct: 0.4,
+      maxSlippagePct: 0.3,
       minSignalScore: 75,
       requireNewsConfirmation: true,
     },
@@ -141,11 +159,13 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
       riskPerTradePct: 1,
       maxPositionPct: 30,
       maxOpenPositions: 5,
+      maxAssetClassExposurePct: 80,
       maxDailyLossPct: 3,
       maxDailyTrades: 30,
       stopLossPct: 1,
       takeProfitPct: 2.5,
       trailingStopPct: 0.8,
+      maxSlippagePct: 0.8,
       minSignalScore: 60,
       minVolumeMultiple: 1.2,
     },
@@ -176,6 +196,7 @@ export const PARAMETER_BOUNDS: Record<
   riskPerTradePct: { min: 0.05, max: 5, step: 0.05 },
   maxPositionPct: { min: 1, max: 100, step: 1 },
   maxOpenPositions: { min: 1, max: 20, step: 1 },
+  maxAssetClassExposurePct: { min: 5, max: 100, step: 5 },
   maxDailyLossPct: { min: 0.25, max: 25, step: 0.25 },
   maxDailyTrades: { min: 1, max: 200, step: 1 },
   stopLossPct: { min: 0.1, max: 20, step: 0.1 },
@@ -183,6 +204,7 @@ export const PARAMETER_BOUNDS: Record<
   trailingStopPct: { min: 0, max: 20, step: 0.1 },
   maxHoldMinutes: { min: 0, max: 1440, step: 5 },
   cooldownMinutes: { min: 0, max: 240, step: 1 },
+  maxSlippagePct: { min: 0.05, max: 10, step: 0.05 },
   flattenBeforeCloseMinutes: { min: 0, max: 120, step: 1 },
   skipOpeningMinutes: { min: 0, max: 120, step: 1 },
   minSignalScore: { min: 0, max: 100, step: 1 },

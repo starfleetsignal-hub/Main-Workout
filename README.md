@@ -35,6 +35,25 @@ by a device-counting activation server. See [Selling it](#selling-it).
 - **Circuit breakers.** A daily loss limit that flattens everything and halts
   trading, plus a daily trade cap. On venues with no prior-day equity mark, the
   baseline is the equity the engine first saw this session.
+- **Portfolio-level guardrails.** A cap on combined exposure per asset class
+  (independent of the per-position size cap), and a slippage guard that cools a
+  symbol down after a fill lands far from where it was sized.
+- **Performance tracking.** An equity curve and drawdown/win-rate/profit-factor
+  stats, computed from the same trade log the engine already keeps, shown on
+  the Positions tab.
+- **A backtesting harness.** Replays historical bars through the real engine —
+  the same `TradingEngine` class, not a reimplementation — to produce a trade
+  list and performance stats before you risk anything live. See
+  [Backtesting](#backtesting).
+- **A remote kill switch.** An optional admin command that flattens every
+  device on a license on its next check-in, for when you need to step in from
+  outside the app.
+- **Local alerts and a crash log.** Opt-in local notifications for a halt, an
+  engine error, a remote flatten, or a stop-loss exit, plus a small on-device
+  error log — no third-party crash reporting service, nothing leaves the
+  device. See Settings → Notifications / Diagnostics.
+- **A one-time risk acknowledgment gate** before the trading UI is reachable at
+  all, independent of the license gate.
 - **Paper mode first**, where the venue offers one. Paper and live are a single
   switch, and going live asks for explicit confirmation.
 
@@ -87,6 +106,30 @@ not something this or any other software can guarantee.
 
 ---
 
+## Backtesting
+
+```bash
+npm run backtest -- --bars-file path/to/your-bars.json   # {"AAPL":[{"t":...,"o":...,"h":...,"l":...,"c":...,"v":...}]}
+npm run backtest -- --symbols AAPL,BTC/USD --key-id $ALPACA_KEY_ID --secret-key $ALPACA_SECRET_KEY
+```
+
+The harness (`backtest/harness.mjs`) builds the real `TradingEngine` with a
+fake broker and fake streams backed by pre-loaded bars — the exact pattern the
+engine test suite uses — then replays them bar by bar, driving indicators,
+entries, exits, sizing and the daily-loss halt exactly as a live run would.
+It prints total return, max drawdown, win rate, profit factor and the full
+trade list.
+
+Known v1 limits, so you don't mistake them for bugs: no historical news is
+simulated (the news component scores neutral, the same path a venue with no
+news feed already takes); exits are checked once per bar at its close, not by
+scanning the bar's high/low; shorting and margin are not modeled (long-only,
+cash-account sizing); and the Alpaca fetch path pulls the most recent `--limit`
+bars, not an arbitrary historical date range. See the comment at the top of
+`backtest/harness.mjs` for the full list.
+
+---
+
 ## Getting started
 
 ```bash
@@ -107,7 +150,8 @@ in the bundle. Start in paper mode where the venue offers one.
 ### Running the tests
 
 ```bash
-npm test          # 130 tests: engine, indicators, sentiment, venues, licensing, activation
+npm test          # 177 tests: engine, analytics, backtesting, indicators, sentiment,
+                   # venues, licensing, activation, the headless control server, alerts
 npm run typecheck
 ```
 
@@ -116,7 +160,12 @@ circuit breakers and reconciliation, with no network access. The venue adapters
 are tested against a mocked `fetch` that pins each request's shape to the
 venue's published API and checks the response mapping. The activation tests
 boot the real activation server as a child process and exercise seat limits,
-revocation and restarts against it directly, rather than mocking it.
+revocation and restarts against it directly, rather than mocking it. The
+backtesting harness is tested against deterministic synthetic bar fixtures
+(a sustained uptrend, a flat market, a scripted stop-loss reversal).
+
+`.github/workflows/ci.yml` runs typecheck, the full test suite, and a web
+bundle export on every push to this branch and every pull request.
 
 ### Running it headless
 
@@ -127,7 +176,11 @@ export ALPACA_KEY_ID=... ALPACA_SECRET_KEY=... TRADERUNNER_LICENSE=TR1....
 npm run headless -- --paper --symbols AAPL,NVDA,BTC/USD
 ```
 
-It is gated by the same license check as the app.
+It is gated by the same license check as the app. Add `--control-port` and
+`--control-token` (or `CONTROL_PORT`/`CONTROL_TOKEN`) to run a small local
+HTTP control server (`headless/control-server.mjs`) alongside it —
+`GET /status`, `POST /flatten`, `POST /stop?flatten=1`, all bearer-token
+gated — for scripting a kill switch into your own tooling.
 
 ---
 
@@ -186,13 +239,21 @@ paying customer:
   limit being hit on a new device. Everything else fails open.
 
 Admin routes (behind `ADMIN_TOKEN`) let you look up a license's devices, raise
-its seat limit, and revoke or restore it:
+its seat limit, revoke or restore it, and remotely flatten every device on a
+license the next time each one checks in:
 
 ```bash
 curl -H "Authorization: Bearer $ADMIN_TOKEN" http://localhost:8788/admin/licenses
 curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' \
   -d '{"licenseId":"...","reason":"refunded"}' http://localhost:8788/admin/revoke
+curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"licenseId":"...","reason":"emergency stop"}' http://localhost:8788/admin/flatten
 ```
+
+A pending flatten is broadcast to every device that checks in (not cleared by
+the first one that sees it — `POST /admin/flatten-clear` clears it explicitly),
+and closing everything is idempotent, so it is a no-op on a device with nothing
+open.
 
 The ledger is an append-only JSON-lines file (`activations.jsonl` by default),
 so seats, revocations and limit changes all survive a restart.
@@ -260,16 +321,30 @@ Before you do:
    the most common rejection for apps like this one. Selling a key on your own
    site for a Mac, web or Android build is a different question from selling one
    for the iOS build.
+4. Fill in `legal/PRIVACY.md` and `legal/TERMS.md`, host them somewhere public,
+   and set `EXPO_PUBLIC_PRIVACY_POLICY_URL` / `EXPO_PUBLIC_TERMS_URL` as build
+   secrets. Both stores require a privacy policy URL before you can submit —
+   the templates are written to match what this codebase actually collects,
+   but they are not legal advice and a real trading app should have a lawyer
+   look them over.
+5. Run `eas init` once to attach the project to your own Expo account (this
+   writes `extra.eas.projectId` into `app.json`); `eas build`/`eas submit`
+   do not work without it. `eas.json` already has `development`, `preview` and
+   `production` build profiles.
+6. Expect Apple's age rating and financial-app review questions — a real-money
+   automated trading app is treated more carefully than an average utility
+   app, and reviewers may ask for a demo account or additional detail.
 
 ## Project layout
 
 ```
 app/                      expo-router routes
-  _layout.tsx             the license gate (Stack.Protected) + navigation theme
+  _layout.tsx             the error boundary, license gate + risk gate (Stack.Protected), navigation theme
   activate.tsx            activation / sales screen
+  risk-ack.tsx            one-time risk acknowledgment, gated independently of the license
   venues.tsx              the venue picker
   connect.tsx             one connect screen, driven by the venue descriptor
-  (tabs)/                 Desk, Positions, News, Rules, Settings
+  (tabs)/                 Desk, Positions (equity curve + stats), News, Rules, Settings
   symbol/[id].tsx         per-symbol signal breakdown
 src/
   engine/                 the trading engine — no React, no React Native
@@ -278,6 +353,7 @@ src/
     indicators.ts         EMA, RSI, VWAP, ATR
     sentiment.ts          on-device news sentiment
     parameters.ts         the rules, their bounds and presets
+    analytics.ts          drawdown / win-rate / profit-factor stats from the trade log
   broker/
     venues.ts             venue capability model + descriptors
     registry.ts           wires a venue id to its broker + stream implementation
@@ -286,17 +362,26 @@ src/
     alpaca/, coinbase/, robinhood/, uphold/, jupiter/
   license/
     format.ts             key format and offline verification
-    activation.ts          seat/lease client logic and the unlock decision
+    activation.ts          seat/lease client logic, the unlock decision, remote flatten
     device.ts             per-install device id, never a hardware identifier
-  context/                React bindings for license, credentials and engine
+    publicKey.ts           build-time config: keys, purchase/privacy/terms URLs
+  notifications/          local trade alerts (halt, error, remote flatten, stop-loss)
+  errors/                 the root error boundary + on-device crash log
+  context/                React bindings for license, risk, notifications, credentials, engine
   components/, theme/     the CosmoPlan visual system (starfield, coin marks, Fredoka)
+backtest/harness.mjs      replays historical bars through the real TradingEngine
+tools/backtest.mjs        backtest CLI: a local bars file, or a recent pull from Alpaca
 tools/license/            keygen, issue, verify
 tools/icons/               app icon generation
 server/
   fulfill.mjs             optional Stripe → license key server
-  activation.mjs          optional seat-counting / revocation server
-headless/run.mjs          run the engine from a terminal
-tests/                    130 tests, no network except the activation server's own child process
+  activation.mjs          optional seat-counting / revocation / remote-flatten server
+headless/
+  run.mjs                 run the engine from a terminal
+  control-server.mjs      optional local HTTP kill switch for the headless runner
+legal/                    privacy policy / terms of use templates to fill in before shipping
+.github/workflows/ci.yml  typecheck, build, test and a web-bundle sanity check
+tests/                    177 tests, no network except the activation server's own child process
 ```
 
 The engine has no dependency on React or React Native, which is why it can be
@@ -329,6 +414,12 @@ This software is not financial advice, and nothing in it is a recommendation to
 buy or sell any asset. Run it in paper mode where available, and size your
 first runs small everywhere else, until you understand exactly what it does.
 Use it at your own risk.
+
+The app makes you acknowledge this once, explicitly, before the trading UI is
+reachable at all (`app/risk-ack.tsx`) — independent of, and in addition to, the
+license gate. Local trade alerts and the on-device crash log are a convenience,
+not a safety net: they only fire while the app's JS process is alive, which is
+the same condition under which the engine manages a position at all.
 
 ## License
 

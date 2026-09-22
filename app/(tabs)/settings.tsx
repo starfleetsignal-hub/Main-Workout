@@ -1,12 +1,15 @@
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chip } from '../../src/components/Chip';
-import { SignalIcon } from '../../src/components/icons';
+import { ShieldIcon, SignalIcon } from '../../src/components/icons';
 import { useCredentials } from '../../src/context/CredentialsContext';
 import { useEngine } from '../../src/context/EngineContext';
 import { useLicense } from '../../src/context/LicenseContext';
+import { useNotifications } from '../../src/context/NotificationsContext';
+import { clearCrashLog, getCrashLog, type CrashEntry } from '../../src/errors/crashLog';
+import { PRIVACY_POLICY_URL, TERMS_URL } from '../../src/license/publicKey';
 import { colors } from '../../src/theme/colors';
 import { fonts } from '../../src/theme/fonts';
 import { radius, shared, spacing } from '../../src/theme/layout';
@@ -25,11 +28,42 @@ export default function SettingsScreen() {
     busy,
     refreshActivation,
     notice,
+    remoteFlatten,
   } = useLicense();
   const { credentials, venue, clear, setMode } = useCredentials();
   const { snapshot, stop } = useEngine();
+  const { enabled: alertsEnabled, supported: alertsSupported, setEnabled: setAlertsEnabled } = useNotifications();
+  const [crashLog, setCrashLog] = useState<CrashEntry[]>([]);
+
+  useEffect(() => {
+    void getCrashLog().then(setCrashLog);
+  }, []);
 
   const running = snapshot.status === 'running' || snapshot.status === 'starting';
+
+  const onClearCrashLog = () => {
+    Alert.alert('Clear the error log?', 'This only removes the on-device record; it does not affect trading.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Clear',
+        style: 'destructive',
+        onPress: async () => {
+          await clearCrashLog();
+          setCrashLog([]);
+        },
+      },
+    ]);
+  };
+
+  const onToggleAlerts = async (next: boolean) => {
+    const result = await setAlertsEnabled(next);
+    if (next && !result) {
+      Alert.alert(
+        'Notifications are off',
+        'TradeRunner is not allowed to send notifications. Turn them on for this app in your device Settings, then try again.'
+      );
+    }
+  };
 
   const onDeactivate = () => {
     Alert.alert(
@@ -108,6 +142,16 @@ export default function SettingsScreen() {
       style={shared.screen}
       contentContainerStyle={{ padding: spacing.lg, paddingTop: insets.top + 56, paddingBottom: 120 }}
     >
+      {remoteFlatten ? (
+        <View style={styles.flattenNotice}>
+          <ShieldIcon size={16} color={colors.down} />
+          <Text style={styles.flattenNoticeText}>
+            Remote flatten requested: {remoteFlatten.reason} All open positions are closed on every check-in until
+            this is cleared.
+          </Text>
+        </View>
+      ) : null}
+
       {notice ? (
         <View style={styles.notice}>
           <SignalIcon size={16} color={colors.gold} />
@@ -172,6 +216,27 @@ export default function SettingsScreen() {
       >
         <Text style={[shared.buttonGhostText, { color: colors.gold }]}>Deactivate this device</Text>
       </Pressable>
+
+      <Text style={styles.groupTitle}>Notifications</Text>
+      <View style={styles.card}>
+        <View style={[styles.row, { borderBottomWidth: 0 }]}>
+          <View style={styles.flex}>
+            <Text style={styles.rowLabel}>Trade alerts</Text>
+            <Text style={styles.rowSub}>
+              {alertsSupported
+                ? 'A halt, an engine error, a remote flatten, or a stop-loss exit — nothing routine.'
+                : 'Requires the iOS or Android app; not available in a web build.'}
+            </Text>
+          </View>
+          <Switch
+            value={alertsEnabled}
+            onValueChange={(v) => void onToggleAlerts(v)}
+            disabled={!alertsSupported}
+            trackColor={{ false: colors.cardLine, true: colors.goldLine }}
+            thumbColor={alertsEnabled ? colors.gold : undefined}
+          />
+        </View>
+      </View>
 
       <Text style={styles.groupTitle}>Venue</Text>
       <View style={styles.card}>
@@ -257,6 +322,27 @@ export default function SettingsScreen() {
         </Text>
       </View>
 
+      <Text style={styles.groupTitle}>Diagnostics</Text>
+      <View style={[styles.card, styles.prose]}>
+        {crashLog.length === 0 ? (
+          <Text style={styles.proseText}>No errors recorded on this device.</Text>
+        ) : (
+          <>
+            {crashLog.slice(0, 5).map((c) => (
+              <View key={c.id} style={styles.crashRow}>
+                <Text style={styles.crashTime}>{new Date(c.at).toLocaleString()}</Text>
+                <Text style={styles.crashMessage} numberOfLines={2}>
+                  {c.message}
+                </Text>
+              </View>
+            ))}
+            <Pressable onPress={onClearCrashLog} accessibilityRole="button" style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
+              <Text style={styles.crashClear}>Clear log ({crashLog.length})</Text>
+            </Pressable>
+          </>
+        )}
+      </View>
+
       {venue ? (
         <Pressable
           onPress={() => void Linking.openURL(venue.docsUrl).catch(() => {})}
@@ -265,6 +351,20 @@ export default function SettingsScreen() {
         >
           <Text style={styles.linkText}>{venue.name} documentation</Text>
         </Pressable>
+      ) : null}
+      {PRIVACY_POLICY_URL || TERMS_URL ? (
+        <View style={styles.legalRow}>
+          {PRIVACY_POLICY_URL ? (
+            <Pressable onPress={() => void Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})} accessibilityRole="link">
+              <Text style={styles.linkText}>Privacy policy</Text>
+            </Pressable>
+          ) : null}
+          {TERMS_URL ? (
+            <Pressable onPress={() => void Linking.openURL(TERMS_URL).catch(() => {})} accessibilityRole="link">
+              <Text style={styles.linkText}>Terms of use</Text>
+            </Pressable>
+          ) : null}
+        </View>
       ) : null}
       <Text style={styles.version}>TradeRunner 1.1.0</Text>
     </ScrollView>
@@ -297,6 +397,24 @@ function Row({
 }
 
 const styles = StyleSheet.create({
+  flattenNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: colors.downSoft,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.down,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  flattenNoticeText: {
+    flex: 1,
+    color: colors.down,
+    fontSize: 12.5,
+    lineHeight: 18,
+    fontFamily: fonts.regular,
+  },
   notice: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -353,6 +471,13 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
     flexShrink: 1,
   },
+  rowSub: {
+    color: colors.textFaint,
+    fontSize: 11.5,
+    lineHeight: 16,
+    fontFamily: fonts.regular,
+    marginTop: 2,
+  },
   action: {
     marginTop: spacing.md,
   },
@@ -374,9 +499,35 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontFamily: fonts.regular,
   },
+  crashRow: {
+    gap: 2,
+  },
+  crashTime: {
+    color: colors.textFaint,
+    fontSize: 11,
+    fontFamily: fonts.medium,
+  },
+  crashMessage: {
+    color: colors.textMuted,
+    fontSize: 12.5,
+    lineHeight: 18,
+    fontFamily: fonts.regular,
+  },
+  crashClear: {
+    color: colors.down,
+    fontSize: 12.5,
+    fontFamily: fonts.semibold,
+    marginTop: spacing.xs,
+  },
   link: {
     marginTop: spacing.xl,
     alignItems: 'center',
+  },
+  legalRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.lg,
+    marginTop: spacing.lg,
   },
   linkText: {
     color: colors.cyan,

@@ -45,5 +45,6 @@ license-private.key
 .env
 licenses.jsonl
 licenses.csv
+activations.jsonl
 dist-node/
 dist-esm/

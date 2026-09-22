@@ -4,9 +4,12 @@ import { createConnection } from '../broker/registry';
 import { TradingEngine } from '../engine/engine';
 import { DEFAULT_PARAMETERS, normalizeParameters, type Parameters } from '../engine/parameters';
 import type { EngineSnapshot } from '../engine/types';
+import { notify } from '../notifications/notifications';
+import { useEngineAlerts } from '../notifications/useEngineAlerts';
 import { prefGet, prefSet } from '../storage/secure';
 import { useCredentials } from './CredentialsContext';
 import { useLicense } from './LicenseContext';
+import { useNotifications } from './NotificationsContext';
 
 const PARAMS_KEY = 'traderunner.parameters.v1';
 
@@ -25,6 +28,7 @@ const EMPTY_SNAPSHOT: EngineSnapshot = {
   realizedPnlToday: 0,
   streams: { stocks: 'off', crypto: 'off', news: 'off' },
   lastTickAt: 0,
+  equityHistory: [],
 };
 
 interface EngineContextValue {
@@ -46,7 +50,8 @@ const EngineContext = createContext<EngineContextValue | undefined>(undefined);
 
 export function EngineProvider({ children }: { children: React.ReactNode }) {
   const { credentials } = useCredentials();
-  const { isUnlocked } = useLicense();
+  const { isUnlocked, remoteFlatten } = useLicense();
+  const { enabled: alertsEnabled } = useNotifications();
   const [parameters, setParameters] = useState<Parameters>(DEFAULT_PARAMETERS);
   const [paramsLoaded, setParamsLoaded] = useState(false);
   const [snapshot, setSnapshot] = useState<EngineSnapshot>(EMPTY_SNAPSHOT);
@@ -92,6 +97,24 @@ export function EngineProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isUnlocked && engineRef.current) void engineRef.current.stop('engine_stop', false);
   }, [isUnlocked]);
+
+  /**
+   * A remote emergency-stop command, broadcast from the activation server and
+   * picked up on the next lease check-in. Flattening is idempotent (a no-op
+   * once nothing is open), so this fires on every renewal while the command
+   * is pending, which covers a device that only reconnects after the command
+   * was issued rather than requiring one to be listening at the exact moment.
+   */
+  useEffect(() => {
+    if (!remoteFlatten || !engineRef.current) return;
+    void engineRef.current.flattenAll('manual');
+    if (alertsEnabled) void notify('Remote flatten requested', remoteFlatten.reason);
+    // `alertsEnabled` deliberately excluded: this should only fire once per new
+    // flatten notice, not every time the alerts preference is toggled.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remoteFlatten]);
+
+  useEngineAlerts(snapshot, alertsEnabled);
 
   // Backgrounding the app does not kill an open position, but we surface it:
   // the engine keeps running while the JS runtime is alive, and reconciles on resume.

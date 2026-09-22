@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    # This repo hosts more than one unrelated app across branches, so there is
+    # no single shared "main" — push CI runs on TradeRunner's own branch.
+    branches: [claude/realtime-trading-app-onuji4]
+  pull_request:
+
+jobs:
+  test:
+    name: Typecheck, build and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build the engine/broker/license modules and run the test suite
+        run: npm test
+
+      - name: Web bundle sanity check
+        run: npx expo export --platform web --output-dir "${{ runner.temp }}/web-build"

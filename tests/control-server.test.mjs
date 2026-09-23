@@ -24,8 +24,18 @@ function makeFakeEngine() {
       return {
         status: 'running',
         statusDetail: 'Watching 3 symbols',
-        positions: { 'BTC/USD': {}, 'AAPL': {} },
-        account: { equity: 12345 },
+        positions: {
+          'BTC/USD': { symbol: 'BTC/USD', side: 'long', qty: 0.5, entryPrice: 100, stopPrice: 90, takeProfitPrice: 120, openedAt: 1 },
+          AAPL: { symbol: 'AAPL', side: 'long', qty: 2, entryPrice: 50, stopPrice: 45, takeProfitPrice: 60, openedAt: 2 },
+        },
+        symbols: { 'BTC/USD': { lastPrice: 110 }, AAPL: { lastPrice: 48 } },
+        account: { equity: 12345, cash: 500 },
+        trades: [{ symbol: 'MSFT', side: 'long', qty: 1, pnl: 5, pnlPct: 0.01, exitReason: 'take_profit', closedAt: 3 }],
+        activity: [{ id: 'a1', at: 4, level: 'info', symbol: 'AAPL', message: 'entered' }],
+        tradesToday: 1,
+        realizedPnlToday: 5,
+        streams: { stocks: 'connected', crypto: 'connected', news: 'off' },
+        lastTickAt: 5,
       };
     },
     async flattenAll() {
@@ -40,12 +50,20 @@ function makeFakeEngine() {
 before(async () => {
   engine = makeFakeEngine();
   const port = 9200 + Math.floor(Math.random() * 300);
-  server = await startControlServer({ engine, token: TOKEN, port, log: () => {} });
+  server = await startControlServer({ engine, token: TOKEN, port, venue: 'Jupiter', mode: 'live', log: () => {} });
   baseUrl = `http://127.0.0.1:${port}`;
 });
 
 after(() => {
   server?.close();
+});
+
+test('the dashboard page loads without a token', async () => {
+  const res = await fetch(`${baseUrl}/`);
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get('content-type'), /text\/html/);
+  const body = await res.text();
+  assert.match(body, /TradeRunner monitor/);
 });
 
 test('a request with no token is refused', async () => {
@@ -63,8 +81,21 @@ test('status reports the engine snapshot', async () => {
   assert.equal(res.status, 200);
   const body = await res.json();
   assert.equal(body.status, 'running');
+  assert.equal(body.venue, 'Jupiter');
+  assert.equal(body.mode, 'live');
   assert.equal(body.openPositions, 2);
   assert.equal(body.equity, 12345);
+  assert.equal(body.account.cash, 500);
+  assert.equal(body.realizedPnlToday, 5);
+
+  const btc = body.positions.find((p) => p.symbol === 'BTC/USD');
+  assert.equal(btc.lastPrice, 110);
+  assert.equal(btc.unrealizedPnl, (110 - 100) * 0.5);
+
+  assert.equal(body.recentTrades.length, 1);
+  assert.equal(body.recentTrades[0].symbol, 'MSFT');
+  assert.equal(body.activity.length, 1);
+  assert.equal(body.activity[0].message, 'entered');
 });
 
 test('POST /flatten calls flattenAll on the engine', async () => {

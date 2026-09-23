@@ -203,6 +203,23 @@ HTTP control server (`headless/control-server.mjs`) alongside it —
 `GET /status`, `POST /flatten`, `POST /stop?flatten=1`, all bearer-token
 gated — for scripting a kill switch into your own tooling.
 
+The same server also serves a plain-HTML **visual monitor** at `GET /` —
+no build step, no CORS problem (it's your own machine talking to itself over
+`127.0.0.1`). Start the runner with a port and a token:
+
+```
+npm run headless -- --creds-file jupiter-creds.json --symbols SOL/USDC \
+  --params crypto-starter-params.json --live \
+  --control-port 4477 --control-token <make up a long random string>
+```
+
+then open `http://127.0.0.1:4477/` in a browser and paste in the same
+control token when it asks (it's saved in that browser only, never sent
+anywhere but this local server). The page shows equity, cash, open
+positions with live unrealized P&L, recent activity and closed trades, and
+refreshes every few seconds — plus the same flatten/stop buttons as the
+API, with a confirmation prompt before either fires.
+
 ---
 
 ## Selling it

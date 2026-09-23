@@ -27,8 +27,10 @@
  *   ALPACA_FEED=iex|sip                default iex
  *   TRADERUNNER_LICENSE                your license key
  *   EXPO_PUBLIC_LICENSE_PUBLIC_KEY     or a .env file with it
- *   CONTROL_TOKEN, CONTROL_PORT        optional local kill-switch server;
- *                                      see headless/control-server.mjs
+ *   CONTROL_TOKEN, CONTROL_PORT        optional local kill-switch server AND
+ *                                      visual dashboard (open http://127.0.0.1:PORT
+ *                                      in a browser once it's running); see
+ *                                      headless/control-server.mjs
  */
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -153,8 +155,9 @@ if (controlPort) {
   }
   const controlHost = String(process.env.CONTROL_HOST ?? args['control-host'] ?? '127.0.0.1');
   const { startControlServer } = await importPath(root, 'headless/control-server.mjs');
-  await startControlServer({ engine, token: controlToken, port: controlPort, host: controlHost });
+  await startControlServer({ engine, token: controlToken, port: controlPort, host: controlHost, venue: broker.label, mode });
   console.log(`Control server on ${controlHost}:${controlPort} — POST /flatten, POST /stop?flatten=1, GET /status`);
+  console.log(`Visual monitor: open http://${controlHost}:${controlPort}/ in a browser and paste in your control token.`);
   if (controlHost !== '127.0.0.1' && controlHost !== 'localhost') {
     console.warn(
       `WARNING: control server bound to ${controlHost}, not localhost. Make sure this is behind your own firewall or VPN — it is not internet-safe on its own.`

@@ -32,6 +32,10 @@ function makeFakeEngine() {
         account: { equity: 12345, cash: 500 },
         trades: [{ symbol: 'MSFT', side: 'long', qty: 1, pnl: 5, pnlPct: 0.01, exitReason: 'take_profit', closedAt: 3 }],
         activity: [{ id: 'a1', at: 4, level: 'info', symbol: 'AAPL', message: 'entered' }],
+        signals: {
+          'BTC/USD': { symbol: 'BTC/USD', score: 82, side: 'long', blockers: [], reasons: ['Trend up', 'Volume confirming'] },
+          AAPL: { symbol: 'AAPL', score: 40, side: null, blockers: ['Warming up: not enough bars for indicators'], reasons: [] },
+        },
         tradesToday: 1,
         realizedPnlToday: 5,
         streams: { stocks: 'connected', crypto: 'connected', news: 'off' },
@@ -96,6 +100,12 @@ test('status reports the engine snapshot', async () => {
   assert.equal(body.recentTrades[0].symbol, 'MSFT');
   assert.equal(body.activity.length, 1);
   assert.equal(body.activity[0].message, 'entered');
+
+  assert.equal(body.signals.length, 2);
+  const aaplSignal = body.signals.find((s) => s.symbol === 'AAPL');
+  assert.equal(aaplSignal.score, 40);
+  assert.equal(aaplSignal.side, null);
+  assert.deepEqual(aaplSignal.blockers, ['Warming up: not enough bars for indicators']);
 });
 
 test('POST /flatten calls flattenAll on the engine', async () => {

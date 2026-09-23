@@ -69,6 +69,16 @@ function statusPayload(engine, meta) {
         closedAt: t.closedAt,
       })),
     activity: (snap.activity ?? []).slice(0, 30),
+    // What the engine currently thinks of each watched symbol, so "why isn't
+    // it trading" is answerable from the page instead of a guess: still
+    // warming up, on cooldown, or just not clearing the score bar yet.
+    signals: Object.values(snap.signals ?? {}).map((s) => ({
+      symbol: s.symbol,
+      score: s.score,
+      side: s.side,
+      blockers: s.blockers,
+      reasons: s.reasons.slice(0, 2),
+    })),
     streams: snap.streams ?? null,
     lastTickAt: snap.lastTickAt ?? null,
     // Equity used to still be the whole `/status` payload; kept at top level too
@@ -160,6 +170,15 @@ const DASHBOARD_HTML = `<!doctype html>
     <div class="card"><div class="label">Realized P&amp;L today</div><div class="value" id="pnlToday">—</div></div>
     <div class="card"><div class="label">Open positions</div><div class="value" id="openCount">—</div></div>
   </div>
+
+  <section>
+    <h2>Signals — why it isn't trading (yet)</h2>
+    <table id="signalsTable">
+      <thead><tr><th>Symbol</th><th>Score</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div id="signalsEmpty" class="empty" style="display:none">No symbols watched yet.</div>
+  </section>
 
   <section>
     <h2>Positions</h2>
@@ -262,6 +281,23 @@ const DASHBOARD_HTML = `<!doctype html>
     pnlEl.textContent = money(s.realizedPnlToday);
     pnlEl.className = 'value ' + signClass(s.realizedPnlToday);
     document.getElementById('openCount').textContent = String(s.openPositions);
+
+    const sigBody = document.querySelector('#signalsTable tbody');
+    sigBody.innerHTML = '';
+    document.getElementById('signalsEmpty').style.display = s.signals.length ? 'none' : 'block';
+    for (const sig of s.signals) {
+      const status = sig.side
+        ? (sig.side + ' ready').toUpperCase()
+        : sig.blockers.length
+        ? sig.blockers[0]
+        : (sig.reasons[0] || 'no qualifying setup yet');
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + sig.symbol + '</td>' +
+        '<td>' + sig.score + '/100</td>' +
+        '<td>' + status + '</td>';
+      sigBody.appendChild(tr);
+    }
 
     const posBody = document.querySelector('#posTable tbody');
     posBody.innerHTML = '';

@@ -386,7 +386,7 @@ export class TradingEngine {
       this.tradesToday += 1;
       this.log(
         'order',
-        `Opened ${side.toUpperCase()} ${filled.filledQty} @ ${fmtPrice(entry)} · stop ${fmtPrice(pos.stopPrice)} · target ${fmtPrice(pos.takeProfitPrice)}`,
+        `Opened ${side.toUpperCase()} ${filled.filledQty} @ ${fmtPrice(entry)} · stop ${fmtPrice(pos.stopPrice)} · target ${fmtPrice(pos.takeProfitPrice)} · order ${order.id}`,
         symbol
       );
 
@@ -476,6 +476,7 @@ export class TradingEngine {
     this.log('signal', `Exit (${reason.replace('_', ' ')})`, symbol);
     try {
       const order = await this.deps.broker.closePosition(symbol);
+      const orderId = order?.id ?? 'n/a';
       let exitPrice = this.symbols[symbol]?.lastPrice ?? pos.entryPrice;
       if (order) {
         const filled = await this.deps.broker.waitForFill(order.id, 20_000);
@@ -506,7 +507,7 @@ export class TradingEngine {
       if (st) st.cooldownUntil = this.now() + this.params.cooldownMinutes * 60_000;
       this.log(
         'order',
-        `Closed ${pos.side.toUpperCase()} ${pos.qty} @ ${fmtPrice(exitPrice)} · P&L ${fmtSigned(pnl, 2)} (${fmtSigned(pnlPct * 100, 2)}%)`,
+        `Closed ${pos.side.toUpperCase()} ${pos.qty} @ ${fmtPrice(exitPrice)} · P&L ${fmtSigned(pnl, 2)} (${fmtSigned(pnlPct * 100, 2)}%) · order ${orderId}`,
         symbol
       );
     } catch (e) {

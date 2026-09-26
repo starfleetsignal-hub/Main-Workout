@@ -10,6 +10,10 @@
  *                          browser and only sends it to this same server)
  *   GET  /status           a snapshot: status, account, positions, recent
  *                          activity and trades
+ *   GET  /parameters       current risk/entry parameters, plus their bounds
+ *   POST /parameters       apply a partial set of parameter overrides live —
+ *                          no restart needed; unspecified fields are left as
+ *                          they are (see setParameters in src/engine/engine.ts)
  *   POST /flatten          close every open position now
  *   POST /stop?flatten=1   stop the engine, optionally flattening first
  *
@@ -148,6 +152,15 @@ const DASHBOARD_HTML = `<!doctype html>
   .msg { font-size: 13px; color: #8b949e; margin-top: 8px; min-height: 16px; }
   .empty { color: #8b949e; font-size: 13px; padding: 8px 0; }
   a.reset { color: #8b949e; font-size: 12px; cursor: pointer; text-decoration: underline; }
+  .param-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px 16px; margin-bottom: 12px; }
+  .param-field label { display: block; font-size: 12px; color: #8b949e; margin-bottom: 4px; }
+  .param-field input[type="text"], .param-field input[type="number"] {
+    width: 100%; padding: 7px 8px; border-radius: 6px; border: 1px solid #30363d;
+    background: #0d1117; color: #e6edf3; font-size: 13px;
+  }
+  .param-field.checkbox { display: flex; align-items: center; gap: 8px; }
+  .param-field.checkbox label { margin-bottom: 0; }
+  .param-field.wide { grid-column: 1 / -1; }
 </style>
 </head>
 <body>
@@ -202,6 +215,17 @@ const DASHBOARD_HTML = `<!doctype html>
       <tbody></tbody>
     </table>
     <div id="tradesEmpty" class="empty" style="display:none">No closed trades yet.</div>
+  </section>
+
+  <section>
+    <h2>Parameters</h2>
+    <p class="sub" style="margin-bottom:10px">Changes apply live — no restart needed. Watchlist and every on/off switch take effect immediately; number fields are clamped to safe ranges automatically.</p>
+    <div id="paramFields"></div>
+    <div class="actions">
+      <button id="reloadParamsBtn">Reload current values</button>
+      <button id="saveParamsBtn">Save parameters</button>
+    </div>
+    <div id="paramsMsg" class="msg"></div>
   </section>
 
   <section>
@@ -359,11 +383,88 @@ const DASHBOARD_HTML = `<!doctype html>
   function startPolling() {
     showApp();
     poll();
+    loadParameters();
     pollTimer = setInterval(poll, 4000);
   }
   function stopPolling() {
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = null;
+  }
+
+  // --- Parameters ------------------------------------------------------
+  const BOOL_PARAMS = [
+    ['tradeStocks', 'Trade stocks'],
+    ['tradeCrypto', 'Trade crypto'],
+    ['fractionalShares', 'Allow fractional shares'],
+    ['exitOnTrendBreak', 'Exit on trend break'],
+    ['stockSessionOnly', 'Stocks: regular session only'],
+    ['allowShorts', 'Allow shorts'],
+    ['requireNewsConfirmation', 'Require news confirmation'],
+  ];
+  let paramBounds = {};
+
+  function fieldLabel(key) {
+    return key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase()).replace('Pct', '%');
+  }
+
+  function renderParamFields(values, bounds) {
+    paramBounds = bounds;
+    const el = document.getElementById('paramFields');
+    el.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'param-grid';
+
+    const watchlistField = document.createElement('div');
+    watchlistField.className = 'param-field wide';
+    watchlistField.innerHTML =
+      '<label for="p_watchlist">Watchlist (comma-separated)</label>' +
+      '<input type="text" id="p_watchlist" value="' + (values.watchlist || []).join(', ') + '" />';
+    grid.appendChild(watchlistField);
+
+    for (const [key, bound] of Object.entries(bounds)) {
+      const field = document.createElement('div');
+      field.className = 'param-field';
+      field.innerHTML =
+        '<label for="p_' + key + '">' + fieldLabel(key) + ' (' + bound.min + '–' + bound.max + ')</label>' +
+        '<input type="number" id="p_' + key + '" data-key="' + key + '" min="' + bound.min + '" max="' + bound.max + '" step="' + (bound.step || 1) + '" value="' + values[key] + '" />';
+      grid.appendChild(field);
+    }
+
+    for (const [key, label] of BOOL_PARAMS) {
+      if (!(key in values)) continue;
+      const field = document.createElement('div');
+      field.className = 'param-field checkbox';
+      field.innerHTML =
+        '<input type="checkbox" id="p_' + key + '" data-key="' + key + '"' + (values[key] ? ' checked' : '') + ' />' +
+        '<label for="p_' + key + '">' + label + '</label>';
+      grid.appendChild(field);
+    }
+    el.appendChild(grid);
+  }
+
+  function collectParamOverrides() {
+    const out = {};
+    const wl = document.getElementById('p_watchlist');
+    if (wl) out.watchlist = wl.value.split(',').map((s) => s.trim()).filter(Boolean);
+    for (const key of Object.keys(paramBounds)) {
+      const input = document.getElementById('p_' + key);
+      if (input) out[key] = Number(input.value);
+    }
+    for (const [key] of BOOL_PARAMS) {
+      const input = document.getElementById('p_' + key);
+      if (input) out[key] = input.checked;
+    }
+    return out;
+  }
+
+  async function loadParameters() {
+    try {
+      const res = await api('/parameters');
+      const body = await res.json();
+      renderParamFields(body.values, body.bounds);
+    } catch (e) {
+      // 401 handled in api(); otherwise leave whatever was last rendered.
+    }
   }
 
   document.getElementById('connectBtn').addEventListener('click', () => {
@@ -396,6 +497,31 @@ const DASHBOARD_HTML = `<!doctype html>
       msgEl.textContent = 'Request failed.';
     }
   }
+  document.getElementById('reloadParamsBtn').addEventListener('click', () => {
+    loadParameters();
+    document.getElementById('paramsMsg').textContent = 'Reloaded from the running engine.';
+  });
+  document.getElementById('saveParamsBtn').addEventListener('click', async () => {
+    if (!window.confirm('Apply these parameters to the live engine now?')) return;
+    const msgEl = document.getElementById('paramsMsg');
+    msgEl.textContent = 'Saving…';
+    try {
+      const res = await api('/parameters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(collectParamOverrides()),
+      });
+      const body = await res.json();
+      if (body.ok) {
+        renderParamFields(body.values, paramBounds);
+        msgEl.textContent = 'Applied — values shown are what the engine actually clamped them to.';
+      } else {
+        msgEl.textContent = 'Failed: ' + (body.message || res.status);
+      }
+    } catch (e) {
+      msgEl.textContent = 'Request failed.';
+    }
+  });
   document.getElementById('flattenBtn').addEventListener('click', () => confirmAndPost('/flatten', 'Close every open position right now'));
   document.getElementById('stopBtn').addEventListener('click', () => confirmAndPost('/stop', 'Stop the engine (positions stay open)'));
   document.getElementById('stopFlattenBtn').addEventListener('click', () => confirmAndPost('/stop?flatten=1', 'Stop the engine and close every open position'));
@@ -412,13 +538,41 @@ const DASHBOARD_HTML = `<!doctype html>
 </html>
 `;
 
-export async function startControlServer({ engine, token, port, host = '127.0.0.1', venue = null, mode = null, log = console.log }) {
+export async function startControlServer({
+  engine,
+  token,
+  port,
+  host = '127.0.0.1',
+  venue = null,
+  mode = null,
+  normalizeParameters = null,
+  parameterBounds = null,
+  log = console.log,
+}) {
   if (!token) throw new Error('startControlServer requires a non-empty token');
 
   function authorised(req) {
     const given = String(req.headers.authorization ?? '').replace(/^Bearer\s+/i, '');
     if (given.length !== token.length) return false;
     return timingSafeEqual(Buffer.from(given), Buffer.from(token));
+  }
+
+  function readJsonBody(req) {
+    return new Promise((resolve, reject) => {
+      let raw = '';
+      req.on('data', (chunk) => {
+        raw += chunk;
+        if (raw.length > 1_000_000) req.destroy(new Error('body too large'));
+      });
+      req.on('end', () => {
+        try {
+          resolve(raw ? JSON.parse(raw) : {});
+        } catch {
+          reject(new Error('invalid JSON body'));
+        }
+      });
+      req.on('error', reject);
+    });
   }
 
   const server = createServer(async (req, res) => {
@@ -438,6 +592,25 @@ export async function startControlServer({ engine, token, port, host = '127.0.0.
 
       if (url.pathname === '/status' && req.method === 'GET') {
         return send(200, statusPayload(engine, { venue, mode }));
+      }
+
+      if (url.pathname === '/parameters' && req.method === 'GET') {
+        return send(200, { ok: true, values: engine.getParameters(), bounds: parameterBounds ?? {} });
+      }
+
+      if (url.pathname === '/parameters' && req.method === 'POST') {
+        if (!normalizeParameters) return send(501, { ok: false, message: 'parameter editing is not wired up' });
+        let overrides;
+        try {
+          overrides = await readJsonBody(req);
+        } catch (e) {
+          return send(400, { ok: false, message: e instanceof Error ? e.message : String(e) });
+        }
+        const current = engine.getParameters();
+        const next = normalizeParameters({ ...current, ...overrides });
+        engine.setParameters(next);
+        log(`[control] parameters updated: ${Object.keys(overrides).join(', ') || '(none)'}`);
+        return send(200, { ok: true, values: next });
       }
 
       if (url.pathname === '/flatten' && req.method === 'POST') {

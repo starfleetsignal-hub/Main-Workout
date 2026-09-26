@@ -20,6 +20,13 @@ function makeFakeEngine() {
   return {
     flattenCalls: 0,
     stopCalls: [],
+    params: { watchlist: ['SOL/USDC'], maxOpenPositions: 1, riskPerTradePct: 0.15, tradeCrypto: true },
+    getParameters() {
+      return this.params;
+    },
+    setParameters(next) {
+      this.params = next;
+    },
     snapshot() {
       return {
         status: 'running',
@@ -51,10 +58,28 @@ function makeFakeEngine() {
   };
 }
 
+const BOUNDS = { maxOpenPositions: { min: 1, max: 20, step: 1 }, riskPerTradePct: { min: 0.05, max: 5, step: 0.05 } };
+function fakeNormalizeParameters(input) {
+  const out = { ...input };
+  for (const [key, bound] of Object.entries(BOUNDS)) {
+    out[key] = Math.min(bound.max, Math.max(bound.min, Number(out[key])));
+  }
+  return out;
+}
+
 before(async () => {
   engine = makeFakeEngine();
   const port = 9200 + Math.floor(Math.random() * 300);
-  server = await startControlServer({ engine, token: TOKEN, port, venue: 'Jupiter', mode: 'live', log: () => {} });
+  server = await startControlServer({
+    engine,
+    token: TOKEN,
+    port,
+    venue: 'Jupiter',
+    mode: 'live',
+    normalizeParameters: fakeNormalizeParameters,
+    parameterBounds: BOUNDS,
+    log: () => {},
+  });
   baseUrl = `http://127.0.0.1:${port}`;
 });
 
@@ -106,6 +131,43 @@ test('status reports the engine snapshot', async () => {
   assert.equal(aaplSignal.score, 40);
   assert.equal(aaplSignal.side, null);
   assert.deepEqual(aaplSignal.blockers, ['Warming up: not enough bars for indicators']);
+});
+
+test('GET /parameters returns the current values and their bounds', async () => {
+  const res = await fetch(`${baseUrl}/parameters`, { headers: { Authorization: `Bearer ${TOKEN}` } });
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.deepEqual(body.values.watchlist, ['SOL/USDC']);
+  assert.equal(body.bounds.maxOpenPositions.max, 20);
+});
+
+test('POST /parameters merges overrides onto the current values and applies them live', async () => {
+  const res = await fetch(`${baseUrl}/parameters`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ maxOpenPositions: 3 }),
+  });
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.values.maxOpenPositions, 3);
+  // Untouched fields survive the merge rather than reverting to some default.
+  assert.deepEqual(body.values.watchlist, ['SOL/USDC']);
+  assert.equal(engine.getParameters().maxOpenPositions, 3);
+});
+
+test('POST /parameters clamps an out-of-range override rather than rejecting it', async () => {
+  const res = await fetch(`${baseUrl}/parameters`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ maxOpenPositions: 999 }),
+  });
+  const body = await res.json();
+  assert.equal(body.values.maxOpenPositions, 20);
+});
+
+test('POST /parameters with no token is refused', async () => {
+  const res = await fetch(`${baseUrl}/parameters`, { method: 'POST', body: JSON.stringify({}) });
+  assert.equal(res.status, 401);
 });
 
 test('POST /flatten calls flattenAll on the engine', async () => {

@@ -86,7 +86,7 @@ console.log(`License OK — ${licenseCheck.payload.sub} (${licenseCheck.payload.
 // --- broker credentials ------------------------------------------------------
 const { createConnection } = await importPath(distDir, 'broker/registry.js');
 const { TradingEngine } = await importPath(distDir, 'engine/engine.js');
-const { normalizeParameters, DEFAULT_PARAMETERS } = await importPath(distDir, 'engine/parameters.js');
+const { normalizeParameters, DEFAULT_PARAMETERS, PARAMETER_BOUNDS } = await importPath(distDir, 'engine/parameters.js');
 
 let creds;
 let mode = 'paper';
@@ -155,7 +155,16 @@ if (controlPort) {
   }
   const controlHost = String(process.env.CONTROL_HOST ?? args['control-host'] ?? '127.0.0.1');
   const { startControlServer } = await importPath(root, 'headless/control-server.mjs');
-  await startControlServer({ engine, token: controlToken, port: controlPort, host: controlHost, venue: broker.label, mode });
+  await startControlServer({
+    engine,
+    token: controlToken,
+    port: controlPort,
+    host: controlHost,
+    venue: broker.label,
+    mode,
+    normalizeParameters,
+    parameterBounds: PARAMETER_BOUNDS,
+  });
   console.log(`Control server on ${controlHost}:${controlPort} — POST /flatten, POST /stop?flatten=1, GET /status`);
   console.log(`Visual monitor: open http://${controlHost}:${controlPort}/ in a browser and paste in your control token.`);
   if (controlHost !== '127.0.0.1' && controlHost !== 'localhost') {

@@ -152,14 +152,18 @@ const DASHBOARD_HTML = `<!doctype html>
   .msg { font-size: 13px; color: #8b949e; margin-top: 8px; min-height: 16px; }
   .empty { color: #8b949e; font-size: 13px; padding: 8px 0; }
   a.reset { color: #8b949e; font-size: 12px; cursor: pointer; text-decoration: underline; }
-  .param-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px 16px; margin-bottom: 12px; }
+  .param-group-title { font-size: 12px; color: #58a6ff; text-transform: uppercase; letter-spacing: .05em; margin: 18px 0 8px; }
+  .param-group-title:first-child { margin-top: 0; }
+  .param-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px 16px; margin-bottom: 4px; }
   .param-field label { display: block; font-size: 12px; color: #8b949e; margin-bottom: 4px; }
-  .param-field input[type="text"], .param-field input[type="number"] {
+  .param-field input[type="text"], .param-field input[type="number"], .param-field select {
     width: 100%; padding: 7px 8px; border-radius: 6px; border: 1px solid #30363d;
     background: #0d1117; color: #e6edf3; font-size: 13px;
   }
-  .param-field.checkbox { display: flex; align-items: center; gap: 8px; }
+  .param-help { font-size: 11px; color: #6e7681; margin-top: 3px; line-height: 1.35; }
+  .param-field.checkbox { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .param-field.checkbox label { margin-bottom: 0; }
+  .param-field.checkbox .param-help { flex-basis: 100%; margin-top: 0; }
   .param-field.wide { grid-column: 1 / -1; }
 </style>
 </head>
@@ -392,67 +396,149 @@ const DASHBOARD_HTML = `<!doctype html>
   }
 
   // --- Parameters ------------------------------------------------------
-  const BOOL_PARAMS = [
-    ['tradeStocks', 'Trade stocks'],
-    ['tradeCrypto', 'Trade crypto'],
-    ['fractionalShares', 'Allow fractional shares'],
-    ['exitOnTrendBreak', 'Exit on trend break'],
-    ['stockSessionOnly', 'Stocks: regular session only'],
-    ['allowShorts', 'Allow shorts'],
-    ['requireNewsConfirmation', 'Require news confirmation'],
+  // Real labels and one-line explanations, matching the phone/web app's own
+  // parameter screen, grouped the same way — so "what does this field mean"
+  // never has to be guessed from a raw camelCase name.
+  const PARAM_GROUPS = [
+    {
+      title: 'Universe',
+      fields: [
+        { key: 'watchlist', kind: 'watchlist', label: 'Watchlist (comma-separated)', help: 'Symbols to watch — stocks like AAPL, crypto like SOL/USDC.' },
+        { key: 'tradeStocks', kind: 'bool', label: 'Trade stocks', help: 'Regular-hours equities from your watchlist.' },
+        { key: 'tradeCrypto', kind: 'bool', label: 'Trade crypto', help: 'Crypto pairs trade around the clock, including weekends.' },
+      ],
+    },
+    {
+      title: 'Size and exposure',
+      fields: [
+        { key: 'riskPerTradePct', kind: 'number', label: 'Risk per trade', suffix: '%', help: 'Position size is set so a stop-out costs about this much of your equity.' },
+        { key: 'maxPositionPct', kind: 'number', label: 'Max position size', suffix: '%', help: 'Cap on any single position as a share of equity.' },
+        { key: 'maxOpenPositions', kind: 'number', label: 'Max open positions', help: 'How many positions can be open at once — needs enough watchlist symbols to fill them.' },
+        { key: 'maxAssetClassExposurePct', kind: 'number', label: 'Max exposure per asset class', suffix: '%', help: 'Cap on combined stock (or crypto) positions as a share of equity, on top of the single-position cap above.' },
+        { key: 'fractionalShares', kind: 'bool', label: 'Allow fractional shares', help: 'Allow fractional stock quantities. Crypto is always fractional.' },
+      ],
+    },
+    {
+      title: 'Circuit breakers',
+      fields: [
+        { key: 'maxDailyLossPct', kind: 'number', label: 'Daily loss limit', suffix: '%', help: 'Hitting this closes everything and halts trading until you resume it.' },
+        { key: 'maxDailyTrades', kind: 'number', label: 'Max trades per day', help: 'Stops opening new positions once this many trades have happened today.' },
+      ],
+    },
+    {
+      title: 'Exits',
+      fields: [
+        { key: 'stopLossPct', kind: 'number', label: 'Stop loss', suffix: '%', help: 'How far price can move against a position before it is closed for a loss.' },
+        { key: 'takeProfitPct', kind: 'number', label: 'Take profit', suffix: '%', help: 'How far price needs to move in your favor before it is closed for a gain.' },
+        { key: 'trailingStopPct', kind: 'number', label: 'Trailing stop', suffix: '%', help: 'Locks in gains once price has moved this far your way. 0 disables it.' },
+        { key: 'maxHoldMinutes', kind: 'number', label: 'Max hold time', suffix: 'm', help: 'Closes a position that stops working after this long. 0 disables it.' },
+        { key: 'exitOnTrendBreak', kind: 'bool', label: 'Exit on trend break', help: 'Close when the fast trend line crosses back against the position.' },
+        { key: 'cooldownMinutes', kind: 'number', label: 'Cooldown after exit', suffix: 'm', help: 'Blocks re-entering the same symbol right after closing it.' },
+        { key: 'maxSlippagePct', kind: 'number', label: 'Slippage guard', suffix: '%', help: 'Flags a fill this far from the price it was sized at and cools the symbol down. Cannot undo an order that already filled.' },
+      ],
+    },
+    {
+      title: 'Entry signal',
+      fields: [
+        {
+          key: 'entryStyle',
+          kind: 'select',
+          label: 'Buy style',
+          help: 'Trend: only buys a confirmed breakout, price already above its average. Dip: buys a discount, price below its average, but still needs the same fresh upward turn — it will not buy a price that is still falling.',
+          options: [
+            ['trend', 'Trend (buy strength)'],
+            ['dip', 'Dip (buy a discount)'],
+          ],
+        },
+        { key: 'minSignalScore', kind: 'number', label: 'Minimum score', help: 'The composite score out of 100 a symbol must reach to be traded.' },
+        { key: 'minVolumeMultiple', kind: 'number', label: 'Volume confirmation', suffix: 'x', help: "Last bar's volume as a multiple of the 20-bar average." },
+        { key: 'rsiMin', kind: 'number', label: 'RSI floor', help: 'Momentum floor. Trend mode wants this in the 50s; dip mode wants it lower (oversold), e.g. 20.' },
+        { key: 'rsiMax', kind: 'number', label: 'RSI ceiling', help: 'Above this, the move is treated as overbought and scores poorly.' },
+        { key: 'allowShorts', kind: 'bool', label: 'Allow short selling', help: 'Shorts apply to stocks only, and need a margin account.' },
+      ],
+    },
+    {
+      title: 'News',
+      fields: [
+        { key: 'newsLookbackMinutes', kind: 'number', label: 'Lookback window', suffix: 'm', help: "How far back headlines count toward a symbol's sentiment." },
+        { key: 'newsMinSentiment', kind: 'number', label: 'Minimum sentiment', help: "Entries need sentiment at or above this, in the trade's direction." },
+        { key: 'newsVetoSentiment', kind: 'number', label: 'Veto level', help: 'Sentiment this bad blocks entries and closes an open position.' },
+        { key: 'requireNewsConfirmation', kind: 'bool', label: 'Require a headline', help: 'Only trade symbols with recent news. Leave this OFF on a venue with no news feed (Jupiter, Coinbase, Robinhood, Uphold) or it blocks every trade forever.' },
+      ],
+    },
+    {
+      title: 'Session (stocks only)',
+      fields: [
+        { key: 'stockSessionOnly', kind: 'bool', label: 'Regular hours only', help: 'Keeps stock trading inside the regular session.' },
+        { key: 'flattenBeforeCloseMinutes', kind: 'number', label: 'Flatten before close', suffix: 'm', help: 'Close stock positions this many minutes before the bell.' },
+        { key: 'skipOpeningMinutes', kind: 'number', label: 'Skip opening minutes', suffix: 'm', help: "Don't open new stock positions in the first few minutes after the open." },
+      ],
+    },
   ];
   let paramBounds = {};
-
-  function fieldLabel(key) {
-    return key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase()).replace('Pct', '%');
-  }
 
   function renderParamFields(values, bounds) {
     paramBounds = bounds;
     const el = document.getElementById('paramFields');
     el.innerHTML = '';
-    const grid = document.createElement('div');
-    grid.className = 'param-grid';
 
-    const watchlistField = document.createElement('div');
-    watchlistField.className = 'param-field wide';
-    watchlistField.innerHTML =
-      '<label for="p_watchlist">Watchlist (comma-separated)</label>' +
-      '<input type="text" id="p_watchlist" value="' + (values.watchlist || []).join(', ') + '" />';
-    grid.appendChild(watchlistField);
+    for (const group of PARAM_GROUPS) {
+      const visible = group.fields.filter((f) => f.key in values);
+      if (!visible.length) continue;
 
-    for (const [key, bound] of Object.entries(bounds)) {
-      const field = document.createElement('div');
-      field.className = 'param-field';
-      field.innerHTML =
-        '<label for="p_' + key + '">' + fieldLabel(key) + ' (' + bound.min + '–' + bound.max + ')</label>' +
-        '<input type="number" id="p_' + key + '" data-key="' + key + '" min="' + bound.min + '" max="' + bound.max + '" step="' + (bound.step || 1) + '" value="' + values[key] + '" />';
-      grid.appendChild(field);
+      const heading = document.createElement('h3');
+      heading.className = 'param-group-title';
+      heading.textContent = group.title;
+      el.appendChild(heading);
+
+      const grid = document.createElement('div');
+      grid.className = 'param-grid';
+
+      for (const f of visible) {
+        const field = document.createElement('div');
+        field.className = 'param-field' + (f.kind === 'watchlist' ? ' wide' : '');
+        const bound = bounds[f.key];
+        const range = f.kind === 'number' && bound ? ' (' + bound.min + '–' + bound.max + (f.suffix ? f.suffix : '') + ')' : '';
+        let control;
+        if (f.kind === 'watchlist') {
+          control = '<input type="text" id="p_' + f.key + '" value="' + (values[f.key] || []).join(', ') + '" />';
+        } else if (f.kind === 'bool') {
+          control = '<input type="checkbox" id="p_' + f.key + '"' + (values[f.key] ? ' checked' : '') + ' />';
+        } else if (f.kind === 'select') {
+          const opts = f.options
+            .map(([v, text]) => '<option value="' + v + '"' + (values[f.key] === v ? ' selected' : '') + '>' + text + '</option>')
+            .join('');
+          control = '<select id="p_' + f.key + '">' + opts + '</select>';
+        } else {
+          control =
+            '<input type="number" id="p_' + f.key + '" min="' + (bound ? bound.min : '') + '" max="' + (bound ? bound.max : '') +
+            '" step="' + (bound && bound.step ? bound.step : 1) + '" value="' + values[f.key] + '" />';
+        }
+        const labelHtml = '<label for="p_' + f.key + '">' + f.label + range + '</label>';
+        const helpHtml = f.help ? '<div class="param-help">' + f.help + '</div>' : '';
+        if (f.kind === 'bool') {
+          field.className += ' checkbox';
+          field.innerHTML = control + labelHtml + helpHtml;
+        } else {
+          field.innerHTML = labelHtml + control + helpHtml;
+        }
+        grid.appendChild(field);
+      }
+      el.appendChild(grid);
     }
-
-    for (const [key, label] of BOOL_PARAMS) {
-      if (!(key in values)) continue;
-      const field = document.createElement('div');
-      field.className = 'param-field checkbox';
-      field.innerHTML =
-        '<input type="checkbox" id="p_' + key + '" data-key="' + key + '"' + (values[key] ? ' checked' : '') + ' />' +
-        '<label for="p_' + key + '">' + label + '</label>';
-      grid.appendChild(field);
-    }
-    el.appendChild(grid);
   }
 
   function collectParamOverrides() {
     const out = {};
-    const wl = document.getElementById('p_watchlist');
-    if (wl) out.watchlist = wl.value.split(',').map((s) => s.trim()).filter(Boolean);
-    for (const key of Object.keys(paramBounds)) {
-      const input = document.getElementById('p_' + key);
-      if (input) out[key] = Number(input.value);
-    }
-    for (const [key] of BOOL_PARAMS) {
-      const input = document.getElementById('p_' + key);
-      if (input) out[key] = input.checked;
+    for (const group of PARAM_GROUPS) {
+      for (const f of group.fields) {
+        const input = document.getElementById('p_' + f.key);
+        if (!input) continue;
+        if (f.kind === 'watchlist') out[f.key] = input.value.split(',').map((s) => s.trim()).filter(Boolean);
+        else if (f.kind === 'bool') out[f.key] = input.checked;
+        else if (f.kind === 'select') out[f.key] = input.value;
+        else out[f.key] = Number(input.value);
+      }
     }
     return out;
   }

@@ -10,6 +10,15 @@ export interface Parameters {
   watchlist: string[];
   tradeStocks: boolean;
   tradeCrypto: boolean;
+  /**
+   * 'trend' (the default) only buys a symbol that's already showing
+   * confirmed strength — price above VWAP, short-term trend pointing up.
+   * 'dip' instead looks for a discount — price below VWAP — but still
+   * requires the same fresh bullish crossover before entering, so it isn't
+   * buying a falling price, only one that has just turned back up from
+   * below its average.
+   */
+  entryStyle: 'trend' | 'dip';
 
   // --- Position sizing & exposure -----------------------------------------
   /** % of account equity risked per trade (distance to stop × qty). */
@@ -84,6 +93,7 @@ export const DEFAULT_PARAMETERS: Parameters = {
   watchlist: ['AAPL', 'NVDA', 'TSLA', 'AMD', 'SPY', 'BTC/USD', 'ETH/USD', 'SOL/USD'],
   tradeStocks: true,
   tradeCrypto: true,
+  entryStyle: 'trend',
 
   riskPerTradePct: 0.5,
   maxPositionPct: 20,
@@ -195,6 +205,34 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
       requireNewsConfirmation: false,
     },
   },
+  {
+    id: 'crypto-dip-buyer',
+    name: 'Crypto dip buyer',
+    description:
+      'Same small-wallet risk limits as Crypto starter, but buys a discount instead of a breakout: it waits for price to be below its recent average AND a fresh bullish turn (so it is not catching a falling price), rather than buying an already-confirmed uptrend.',
+    values: {
+      watchlist: ['SOL/USDC'],
+      tradeStocks: false,
+      tradeCrypto: true,
+      entryStyle: 'dip',
+      riskPerTradePct: 0.15,
+      maxPositionPct: 8,
+      maxOpenPositions: 1,
+      maxAssetClassExposurePct: 40,
+      maxDailyLossPct: 1,
+      maxDailyTrades: 5,
+      stopLossPct: 0.7,
+      takeProfitPct: 1.4,
+      trailingStopPct: 0.5,
+      maxHoldMinutes: 60,
+      cooldownMinutes: 30,
+      maxSlippagePct: 0.3,
+      minSignalScore: 70,
+      rsiMin: 20,
+      rsiMax: 42,
+      requireNewsConfirmation: false,
+    },
+  },
 ];
 
 interface Bound {
@@ -210,6 +248,7 @@ export const PARAMETER_BOUNDS: Record<
     | 'watchlist'
     | 'tradeStocks'
     | 'tradeCrypto'
+    | 'entryStyle'
     | 'fractionalShares'
     | 'exitOnTrendBreak'
     | 'stockSessionOnly'
@@ -253,6 +292,7 @@ export function normalizeParameters(input: unknown): Parameters {
   for (const key of Object.keys(PARAMETER_BOUNDS) as (keyof typeof PARAMETER_BOUNDS)[]) {
     out[key] = clamp(Number(out[key]), PARAMETER_BOUNDS[key]);
   }
+  out.entryStyle = src.entryStyle === 'dip' ? 'dip' : 'trend';
   if (out.rsiMin > out.rsiMax) [out.rsiMin, out.rsiMax] = [out.rsiMax, out.rsiMin];
   if (out.newsVetoSentiment > out.newsMinSentiment) out.newsVetoSentiment = out.newsMinSentiment;
   out.watchlist = Array.from(

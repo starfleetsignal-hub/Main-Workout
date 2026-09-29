@@ -258,6 +258,12 @@ export default function ParametersScreen() {
       </SettingGroup>
 
       <SettingGroup title="Entry signal">
+        <SwitchSetting
+          label="Buy the dip"
+          help="Off (trend): only buys a confirmed breakout — price already above its average. On (dip): buys a discount — price below its average — but still requires the same fresh upward turn, so it won't buy a price that's still falling."
+          value={p.entryStyle === 'dip'}
+          onChange={(v) => updateParameters({ entryStyle: v ? 'dip' : 'trend' })}
+        />
         <NumberSetting
           label="Minimum score"
           help="The composite score out of 100 a symbol must reach to be traded."

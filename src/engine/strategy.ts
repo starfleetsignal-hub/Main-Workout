@@ -6,12 +6,15 @@ import type { MarketClock, Side, Signal, SignalComponent, SymbolState } from './
  * trend, momentum, volume and news components. Anything that makes an
  * entry unacceptable is a "blocker" (hard veto), independent of the score.
  *
- * This mirrors a discretionary day-trader's checklist:
- *   - is price above VWAP and the fast EMA above the slow EMA? (trend)
- *   - did the fast EMA just cross? (fresh momentum, not chasing)
- *   - is RSI healthy but not overbought?
- *   - is volume confirming?
- *   - is the news flow supportive, or at least not hostile?
+ * `params.entryStyle` picks which of two checklists this mirrors:
+ *   - 'trend' (default), a discretionary breakout trader's checklist: is
+ *     price above VWAP and the fast EMA above the slow EMA? did the fast
+ *     EMA just cross? is RSI healthy but not overbought? is volume
+ *     confirming?
+ *   - 'dip', the same checklist with one line changed: is price *below*
+ *     VWAP (a discount) instead of above it? Everything else — the fresh
+ *     EMA cross, the RSI band, volume — still has to agree, so it only
+ *     buys a discount that has just turned back up, not one still falling.
  */
 export function evaluateEntry(
   state: SymbolState,
@@ -104,15 +107,22 @@ function scoreSide(
   const ind = state.indicators!;
   const px = state.lastPrice;
   const dir = side === 'long' ? 1 : -1;
+  const dip = params.entryStyle === 'dip';
   const components: SignalComponent[] = [];
 
-  // Trend vs VWAP (20)
-  const vsVwap = ((px - ind.vwap) / ind.vwap) * dir;
+  // Vs VWAP (20). Trend mode wants price on the strong side of VWAP (a
+  // breakout); dip mode wants the opposite — a discount off it — while
+  // every other component (EMA alignment, the fresh-cross requirement,
+  // volume) stays the same, so a dip entry still needs a confirmed bounce,
+  // not just "it's cheap."
+  const vsVwap = ((dip ? ind.vwap - px : px - ind.vwap) / ind.vwap) * dir;
   components.push({
     name: 'VWAP',
     max: 20,
     points: vsVwap > 0 ? Math.min(20, 12 + Math.round(vsVwap * 100 * 4)) : 0,
-    detail: `price ${vsVwap >= 0 ? 'on the right side of' : 'on the wrong side of'} VWAP by ${(Math.abs(vsVwap) * 100).toFixed(2)}%`,
+    detail: dip
+      ? `price ${vsVwap >= 0 ? 'a discount below' : 'not below'} VWAP by ${(Math.abs(vsVwap) * 100).toFixed(2)}%`
+      : `price ${vsVwap >= 0 ? 'on the right side of' : 'on the wrong side of'} VWAP by ${(Math.abs(vsVwap) * 100).toFixed(2)}%`,
   });
 
   // EMA alignment (20)
